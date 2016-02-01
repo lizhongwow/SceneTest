@@ -1,0 +1,5 @@
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTestLib\bin\Debug\SceneTestLib.dll
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTestLib\bin\Debug\SceneTestLib.pdb
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTestLib\obj\Debug\SceneTestLib.csprojResolveAssemblyReference.cache
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTestLib\obj\Debug\SceneTestLib.dll
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTestLib\obj\Debug\SceneTestLib.pdb
