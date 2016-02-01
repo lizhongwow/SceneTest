@@ -1,0 +1,3 @@
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\obj\x86\Debug\SceneTest.csprojResolveAssemblyReference.cache
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\obj\x86\Debug\Interop.MSXML2.dll
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\obj\x86\Debug\SceneTest.csproj.ResolveComReference.cache

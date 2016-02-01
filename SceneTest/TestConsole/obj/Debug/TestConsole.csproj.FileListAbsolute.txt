@@ -1,0 +1,8 @@
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\bin\Debug\TestConsole.exe.config
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\bin\Debug\TestConsole.exe
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\bin\Debug\TestConsole.pdb
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\bin\Debug\SceneTestLib.dll
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\bin\Debug\SceneTestLib.pdb
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\obj\Debug\TestConsole.csprojResolveAssemblyReference.cache
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\obj\Debug\TestConsole.exe
+C:\Users\CV-PC429\Documents\Visual Studio 2010\Projects\SceneTest\TestConsole\obj\Debug\TestConsole.pdb
