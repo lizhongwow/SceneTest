@@ -1,4 +1,5 @@
 using SceneTest;
+using SceneTestLib;
 using SceneTestLib.Confs;
 using System;
 using System.Collections.Generic;
@@ -9,11 +10,12 @@ namespace SceneTest
 {
     public class grid_map
     {
-
+        private Atomic_Int _iid_generator = new Atomic_Int(0);
+        public Grd grd { get; set; }
         public bool blvlmap { get; set; }
         public map_conf map_conf = null;
         public Dictionary<int, IBaseUnit> map_mons = null;
-        public Dictionary<int, IBaseUnit> map_mon_bymid = null;
+        public Dictionary<int, List<IBaseUnit>> map_mon_bymid = new Dictionary<int, List<IBaseUnit>>();
         public Dictionary<int, IBaseUnit> map_sprites = null;
         public Dictionary<int, IBaseUnit> map_players = null;
         public Dictionary<int, IBaseUnit> map_players_bysid = null;
@@ -56,6 +58,8 @@ namespace SceneTest
 
         public long last_check_tm = 0;      // 最后一次update检测时间
 
+        public long close_tm { get; set; }
+
         public bool map_fined = false;
 
         public int get_plycnt()
@@ -73,6 +77,77 @@ namespace SceneTest
         {
             get;
             private set;
+        }
+
+        public grid_map(int mapid)
+        {
+            map_conf = Utility.get_map_conf(mapid);
+
+            this.grd = new Grd(map_conf);
+
+            this.mapid = mapid;
+            this.map_mons = new Dictionary<int, IBaseUnit>();
+            this.map_mon_bymid = new Dictionary<int, List<IBaseUnit>>();
+            this.map_sprites = new Dictionary<int, IBaseUnit>();
+            this.map_players = new Dictionary<int, IBaseUnit>();
+            this.map_players_bysid = new Dictionary<int, IBaseUnit>();
+            this.map_players_bycid = new Dictionary<int, IBaseUnit>();
+            this.pk_seting = this.get_map_pkseting();
+
+            this.immrespawn = map_conf.immrespawn == 1;
+
+            this.map_dpitms = new Dictionary<int, map_item>();
+
+            this.last_check_tm = 0;
+            this.map_skills = new Dictionary<int, player_skill_data>();
+
+            var monster_count = this.get_monster_desc_count();
+
+            this.trigger_conf = new
+            this.tmtriggers = { };
+            this.areatriggers = { };
+            this.kmtriggers = { };
+            this.useitmtriggers = { };
+            this.mistriggers = { };
+            this.othertriggers = { };
+            this.callmon_added = { };
+            this.petmon_cache = { };
+            this.add_npcs = [];
+            this.add_links = [];
+            this.mapstats = [];
+            this.paths = { };
+            //this.team_drop_itm = {};
+
+            this.temp_sid_ary = int_ary.create_int_ary();
+
+
+
+
+
+            var i = 0;
+            for (; i < monster_count; ++i)
+            {
+                var m = new Monster();
+
+                m.gmap = this;
+                m.on_pos_change(m.mondata.x, m.mondata.y);
+                IMapUnit mon = m.get_pack_data();
+
+                this.map_mons[mon.iid] = m;
+                this.map_sprites[mon.iid] = m;
+
+                List<IBaseUnit> mons = null;
+                if (this.map_mon_bymid.TryGetValue(mon.mid, out mons))
+                {
+                    mons.Add(m);
+                }
+                else
+                {
+                    mons = new List<IBaseUnit>();
+                    mons.Add(m);
+                    this.map_mon_bymid[mon.mid] = mons;
+                }
+            }
         }
 
         public player_skill_data get_map_skill(int skid)
@@ -100,7 +175,7 @@ namespace SceneTest
 
         public List<Point2D> find_path(int src_grid_x, int src_grid_y, int dest_grid_x, int dest_grid_y)
         {
-            throw new NotImplementedException();
+            return this.grd.find_Path(src_grid_x, src_grid_y, dest_grid_x, dest_grid_y);
         }
 
         public List<Point2D> find_path(double src_grid_x, double src_grid_y, double dest_grid_x, double dest_grid_y)
@@ -110,12 +185,15 @@ namespace SceneTest
 
         public bool is_grid_walkable(int grid_x, int grid_y)
         {
-            throw new NotImplementedException();
+            return grd.is_grid_walkable(grid_x, grid_y);
         }
 
         public Point2D get_grid_by_pt(double x, double y)
         {
-            throw new NotImplementedException();
+            int gx = (int)(x / 32);
+            int gy = (int)(y / 32);
+
+            return new Point2D(gx, gy);
         }
 
         public bool has_sprite(int sprite_iid)
@@ -139,9 +217,9 @@ namespace SceneTest
         /// <param name="y"></param>
         /// <param name="player"></param>
         /// <returns></returns>
-        public int add_player(int sid, double x, double y, IBaseUnit player)
+        public int add_player(int sid, double x, double y, IBaseUnit sgplayer)
         {
-            throw new NotImplementedException();
+            return _iid_generator.Next_Value();
         }
 
         public void add_player_to_map(IService game_ref, int clientid, IBaseUnit sgplayer)
@@ -3006,6 +3084,323 @@ namespace SceneTest
             return false;
         }
 
+        public void update(game_ref, long tm_elasped_s)
+        {
+            //sys.trace(sys.SLT_SYS, "sg_map update\n");
+
+            if (map_fined)
+            {
+                Utility.trace_err("err:gmap is finished mapid=[" + this.mapid + "]\n");
+                return;
+            }
+
+            var cur_tm_s = sys.time();
+            var cur_clock_tm = sys.clock_time();
+            var players_info = game_ref.sgplayers;
+
+            this.update_flys(cur_clock_tm);
+
+            this._update_dpitm(cur_tm_s);
+            //this._update_team_dpitm(cur_tm_s);
+
+            //// update players
+            //var i = 0;
+            //for(i=0;i<this.get_player_count();++i)
+            //{
+            //    var cid = this.get_player_cid(i);
+            //    var latency = svr.get_session_latency(cid);
+
+            //    //sys.trace(sys.SLT_SYS, "cur systm time ["+cur_clock_tm+"]ms\n");
+            //    //sys.trace(sys.SLT_SYS, "player["+cid+"] latency ["+latency+"]ms\n");
+
+            //    if(!(cid in players_info))
+            //    {
+            //        continue;
+            //    }
+
+            //    players_info[cid].update(game_ref, cur_clock_tm);
+            //    //players_info[cid].update_move(game_ref, cur_clock_tm);
+            //    //players_info[cid].update_atk(cur_clock_tm);
+            //}
+
+            //// update monsters
+            //foreach(idx, val in map_mons)
+            //{
+            //    val.update(game_ref, cur_clock_tm);
+            //    //val.update_move(cur_clock_tm);
+            //    //val.update_atk(cur_clock_tm);
+            //    //val.think(cur_clock_tm);
+            //}
+
+            // update sprites
+            var time_trace_ms = sys.clock_time();
+            foreach (idx, val in this.map_sprites)
+        {
+                // logical update
+                val.update(game_ref, cur_clock_tm, tm_elasped_s);
+            }
+            time_trace_ms = sys.clock_time() - time_trace_ms;
+            if (time_trace_ms > 200)
+            {
+                Utility.trace_info("map id[" + this.mapid + "] sprites len[" + this.map_sprites.Count + "] update cost time[" + time_trace_ms + "]\n");
+            }
+
+            // calculate per sprite zone change
+            //foreach(idx, val in this.map_sprites)
+            //{
+            //    val.calc_zone_sprite();
+            //}
+            this.calc_zone_sprite();
+
+            foreach (idx, val in this.map_sprites)
+        {
+                if (val.get_sprite_type() == map_sprite_type.MstPlayer)
+                {
+                    // player character
+                    var lvz_iids = val.get_levz_iids();
+                    if (lvz_iids.Count > 0)
+                    {
+                    ::send_rpc(val.pinfo.sid, 56, { iidary = lvz_iids});   // send sprite leave zone to player
+                        if (val.pinfo.marryid > 0 && val.pinfo.mate_iid != 0)
+                        {
+                            foreach (iid in lvz_iids)
+                            {
+                                if (val.pinfo.mate_iid == iid)
+                                {
+                                    val.set_mate_iid(0);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    var new_plys = val.get_new_inz_vsb_plys();
+                    var new_mons = val.get_new_inz_vsb_mons();
+
+                    //Utility.trace_info("player sid ["+val.pinfo.sid+"] on new plys:\n");
+                    //sys.dumpobj(new_plys);
+
+                    if (new_plys.Count > 0)
+                    {
+                        var plys_data = { pary =[] };
+                        foreach (idx,ply in new_plys)
+                    {
+                            plys_data.pary.push(ply.pinfo);
+                        }
+
+                    ::send_rpc(val.pinfo.sid, 54, plys_data);   // send player enter zone to player
+
+                        //配偶是否进入视野
+                        if (val.pinfo.marryid > 0 && val.pinfo.mate_iid == 0)
+                        {
+                            foreach (ply in new_plys)
+                            {
+                                if (ply.pinfo.cid == val.pinfo.mate_cid)
+                                {
+                                    val.set_mate_iid(ply.pinfo.iid);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (new_mons.Count > 0)
+                    {
+                        var mons_data = { monsters =[] };
+                        foreach (idx,mon in new_mons)
+                    {
+                            if (!(mon.mondata.dieshow) && (mon.isdie()))
+                            {
+                                continue;
+                            }
+
+                            mons_data.monsters.push(mon.mondata);
+                        }
+
+                    ::send_rpc(val.pinfo.sid, 55, mons_data);   // send monster enter zone to player
+                    }
+                }
+
+                val.apply_new_inz_spr();
+            }
+
+            // 更新触发器
+
+            var to_rmv_tmtrgids = [];
+            var to_rmv_areatrgids = [];
+            var to_rmv_kmtrgids = [];
+            var to_rmv_uitmtrgids = [];
+            var to_rmv_mistrgids = [];
+            var to_add_trgconf = [];
+            var to_rmv_othertrgids = [];
+
+            foreach (trid, trg in this.tmtriggers)
+        {
+                trg.tmleft -= tm_elasped_s;
+                if (trg.tmleft > 0)
+                {
+                    continue;
+                }
+
+                // 触发
+
+                --trg.cnt;
+                trg.tmleft = trg.conf.timer[0].tm;
+
+                if (trg.cnt <= 0)
+                {
+                    to_rmv_tmtrgids.push(trid);
+                }
+
+                this._trig_res(trg.conf, null, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+            }
+
+            foreach (trid, trg in this.areatriggers)
+        {
+                foreach (ply in map_players)
+                {
+                    if (trg.area[0].sideid != 0 && trg.area[0].sideid != ply.pinfo.lvlsideid)
+                    {
+                        continue;
+                    }
+
+                    if (ply.pinfo.x > trg.area[0].x && ply.pinfo.y > trg.area[0].y && ply.pinfo.x < trg.area[0].x + trg.area[0].width && ply.pinfo.y < trg.area[0].y + trg.area[0].height)
+                    {
+                        // 触发
+
+                        if (!_trigger_attchk(ply, trg))
+                        {
+                            continue;
+                        }
+
+                        to_rmv_areatrgids.push(trid);
+
+                        this._trig_res(trg, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+                    }
+                }
+            }
+
+            // 间隔判断是否经过了自然日（参考player的sync_db_data实现），若经过了自然日，则重置每日重复触发器
+            if ((cur_tm_s > this.last_check_tm + 5)) // 5秒一次
+            {
+                if (this.last_check_tm > 0)
+                {
+                    var local_tm = sys.trans_local_time(cur_tm_s);
+                    var last_trg_tm = sys.trans_local_time(this.last_check_tm);
+
+                    if ((_compare_ymd_tm(local_tm, last_trg_tm) > 0))
+                    {
+                        foreach (trid, trconf in this.trigger_conf)
+                    {
+                            if ("dalyrep" in trconf)
+                        {
+                                // 重置每日重复触发器
+                                //Utility.trace_info("reset daly trigger!\n");
+
+                                if (trid in this.tmtriggers) 
+                            {
+                                    this.tmtriggers[trid].cnt = trconf.dalyrep;
+                                }
+                            else if (trid in this.areatriggers) 
+                            {
+                                    to_rmv_areatrgids.push(trid);
+                                }
+                            else if (trid in this.kmtriggers) 
+                            {
+                                    this.kmtriggers[trid].cnt = trconf.dalyrep;
+                                }
+                            else if (trid in this.useitmtriggers) 
+                            {
+                                    this.useitmtriggers[trid].cnt = trconf.dalyrep;
+                                }
+                            else if (trid in this.mistriggers) 
+                            {
+                                    this.mistriggers[trid].cnt = trconf.dalyrep;
+                                }
+                            else if (trid in this.othertriggers) 
+                            {
+                                    this.othertriggers[trid].cnt = trconf.dalyrep;
+                                }
+                            else
+                            {
+                                    to_add_trgconf.push(trid);
+                                }
+                            }
+                        }
+                    }
+                }
+                this.last_check_tm = cur_tm_s;
+            }
+
+            foreach (trid in to_rmv_tmtrgids)
+            {
+                if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+            }
+            foreach (trid in to_rmv_areatrgids)
+            {
+                if (trid in this.areatriggers) delete this.areatriggers[trid];
+            }
+            foreach (trid in to_rmv_kmtrgids)
+            {
+                if (trid in this.kmtriggers) delete this.kmtriggers[trid];
+            }
+            foreach (trid in to_rmv_uitmtrgids)
+            {
+                if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+            }
+            foreach (trid in to_rmv_mistrgids)
+            {
+                if (trid in this.mistriggers) delete this.mistriggers[trid];
+            }
+            foreach (trid in to_rmv_othertrgids)
+            {
+                if (trid in this.othertriggers) delete this.othertriggers[trid];
+            }
+            foreach (trid in to_add_trgconf)
+            {
+                this._add_triger(this.trigger_conf[trid]);
+            }
+
+            // 更新动态npc列表
+            for (var i = 0; i < this.add_npcs.Count; ++i)
+            {
+                var npc = this.add_npcs[i];
+                if (npc.dis_tm != 0 && npc.dis_tm <= cur_tm_s)
+                {
+                    this.add_npcs.remove(i);
+                    --i;
+                    continue;
+                }
+            }
+
+            // 更新动态npc列表
+            for (var i = 0; i < this.add_links.Count; ++i)
+            {
+                var link = this.add_links[i];
+                if (link.dis_tm != 0 && link.dis_tm <= cur_tm_s)
+                {
+                    this.add_links.remove(i);
+                    --i;
+                    continue;
+                }
+            }
+
+            // 更新地图技能状态对象
+            for (var i = 0; i < this.mapstats.Count; ++i)
+            {
+                var mapstat = this.mapstats[i];
+                var needrmv = _update_mapstat(mapstat, cur_tm_s, cur_clock_tm);
+                if (needrmv)
+                {
+                    this.mapstats.remove(i);
+                    --i;
+
+                    // bcast add_npcs msg
+                    this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = mapstat.id}]});
+
+            continue;
+        }
+
 
 
 
@@ -3056,70 +3451,18 @@ namespace SceneTest
             return (map_pk_setting_type)this.map_conf.pk;
         }
 
-
-        public void init(int mapid)
+        public void fin()
         {
-            map_conf = Utility.get_map_conf(mapid);
-
-            this.mapid = mapid;
-            this.map_mons = new Dictionary<int, IBaseUnit>();
-            this.map_mon_bymid = new Dictionary<int, IBaseUnit>();
-            this.map_sprites = new Dictionary<int, IBaseUnit>();
-            this.map_players = new Dictionary<int, IBaseUnit>();
-            this.map_players_bysid = new Dictionary<int, IBaseUnit>();
-            this.map_players_bycid = new Dictionary<int, IBaseUnit>();
-            this.pk_seting = this.get_map_pkseting();
-
-            this.immrespawn = map_conf.immrespawn == 1;
-
-            this.map_dpitms = new Dictionary<int, map_item>();
-
-            this.last_check_tm = 0;
-            this.map_skills = new Dictionary<int, player_skill_data>();
-
-            var monster_count = this.get_monster_desc_count();
-
-            this.trigger_conf = new 
-            this.tmtriggers = { };
-            this.areatriggers = { };
-            this.kmtriggers = { };
-            this.useitmtriggers = { };
-            this.mistriggers = { };
-            this.othertriggers = { };
-            this.callmon_added = { };
-            this.petmon_cache = { };
-            this.add_npcs = [];
-            this.add_links = [];
-            this.mapstats = [];
-            this.paths = { };
-            //this.team_drop_itm = {};
-            
-            this.temp_sid_ary = int_ary.create_int_ary();
-           
-            
-
-            
-
-            var i = 0;
-            for (; i < monster_count; ++i)
+            map_fined = true;
+            // release monsters
+            foreach (var val in map_mons.Values)
             {
-                var m = new Monster();
-
-                m.gmap = this;
-                m.on_pos_change(m.mondata.x, m.mondata.y);
-
-                this.map_mons[m.get_monster_iid()] < -m;
-                this.map_sprites[m.get_monster_iid()] < -m;
-
-                if (!(m.mondata.mid in this.map_mon_bymid))
-            {
-                this.map_mon_bymid[m.mondata.mid] < - [m];
+                this.release_monster(val);
             }
-            else
-            {
-                this.map_mon_bymid[m.mondata.mid].push(m);
-            }
+            this.release_map();
+            this.temp_sid_ary.clear();
         }
+
         //debug_map();
         //Utility.trace_info("map [" + mapid +"] with ["+this.map_mons.Count+"] monster created\n");
     }
@@ -4089,17 +4432,7 @@ namespace SceneTest
         }
     }
 
-    public void fin()
-    {
-        map_fined = true;
-        // release monsters
-        foreach (idx, val in map_mons)
-        {
-            this.release_monster(val);
-        }
-        this.release_map();
-        this.temp_sid_ary.clear();
-    }
+
 
     public void broadcast_map_rpc(cmd_id, data)
     {
@@ -5390,51 +5723,6 @@ namespace SceneTest
         }
     }
 
-    public void valpoint_on_line(frm_pos, to_pos, max_rang, sublen= 0)
-    {
-        var dist_x = to_pos.x - frm_pos.x;
-        var dist_y = to_pos.y - frm_pos.y;
-        var dist2 = dist_x * dist_x + dist_y * dist_y;
-        var vec = sys.normalize_vec2({ x = dist_x, y = dist_y});
-
-        var dest_x = to_pos.x;
-        var dest_y = to_pos.y;
-        if (max_rang * max_rang < dist2)
-        {
-            // 目标点太远，计算落点
-            dest_x = (frm_pos.x + vec.x * max_rang);
-            dest_y = (frm_pos.y + vec.y * max_rang);
-        }
-
-        if (sublen > 0 && (abs(to_pos.x - frm_pos.x) > sublen || abs(to_pos.y - frm_pos.y) > sublen))
-        {
-            dest_x = (dest_x - vec.x * sublen);
-            dest_y = (dest_y - vec.y * sublen);
-        }
-
-        var total_len = 0;
-        var grid_pos = this.get_grid_by_pt(dest_x, dest_y);
-        while (!grid_pos || !is_grid_walkableEx(grid_pos.x, grid_pos.y))
-        {
-            // 目标落点无法行走，更改落点
-            dest_x = (dest_x - vec.x * game_const.map_grid_pixel);
-            dest_y = (dest_y - vec.y * game_const.map_grid_pixel);
-            total_len += 32;
-
-            if (total_len >= 1024)
-            {
-                dest_x = frm_pos.x;
-                dest_y = frm_pos.y;
-                break;
-            }
-
-            grid_pos = this.get_grid_by_pt(dest_x, dest_y);
-        }
-
-        return { x = dest_x, y = dest_y};
-    }
-
-
     public bool is_grid_walkableEx(int gx, int gy)
     {
         //return true;
@@ -6194,323 +6482,6 @@ namespace SceneTest
         }
 
         return false;
-    }
-
-    public void update(game_ref, long tm_elasped_s)
-    {
-        //sys.trace(sys.SLT_SYS, "sg_map update\n");
-
-        if (map_fined)
-        {
-            Utility.trace_err("err:gmap is finished mapid=[" + this.mapid + "]\n");
-            return;
-        }
-
-        var cur_tm_s = sys.time();
-        var cur_clock_tm = sys.clock_time();
-        var players_info = game_ref.sgplayers;
-
-        this.update_flys(cur_clock_tm);
-
-        this._update_dpitm(cur_tm_s);
-        //this._update_team_dpitm(cur_tm_s);
-
-        //// update players
-        //var i = 0;
-        //for(i=0;i<this.get_player_count();++i)
-        //{
-        //    var cid = this.get_player_cid(i);
-        //    var latency = svr.get_session_latency(cid);
-
-        //    //sys.trace(sys.SLT_SYS, "cur systm time ["+cur_clock_tm+"]ms\n");
-        //    //sys.trace(sys.SLT_SYS, "player["+cid+"] latency ["+latency+"]ms\n");
-
-        //    if(!(cid in players_info))
-        //    {
-        //        continue;
-        //    }
-
-        //    players_info[cid].update(game_ref, cur_clock_tm);
-        //    //players_info[cid].update_move(game_ref, cur_clock_tm);
-        //    //players_info[cid].update_atk(cur_clock_tm);
-        //}
-
-        //// update monsters
-        //foreach(idx, val in map_mons)
-        //{
-        //    val.update(game_ref, cur_clock_tm);
-        //    //val.update_move(cur_clock_tm);
-        //    //val.update_atk(cur_clock_tm);
-        //    //val.think(cur_clock_tm);
-        //}
-
-        // update sprites
-        var time_trace_ms = sys.clock_time();
-        foreach (idx, val in this.map_sprites)
-        {
-            // logical update
-            val.update(game_ref, cur_clock_tm, tm_elasped_s);
-        }
-        time_trace_ms = sys.clock_time() - time_trace_ms;
-        if (time_trace_ms > 200)
-        {
-            Utility.trace_info("map id[" + this.mapid + "] sprites len[" + this.map_sprites.Count + "] update cost time[" + time_trace_ms + "]\n");
-        }
-
-        // calculate per sprite zone change
-        //foreach(idx, val in this.map_sprites)
-        //{
-        //    val.calc_zone_sprite();
-        //}
-        this.calc_zone_sprite();
-
-        foreach (idx, val in this.map_sprites)
-        {
-            if (val.get_sprite_type() == map_sprite_type.MstPlayer)
-            {
-                // player character
-                var lvz_iids = val.get_levz_iids();
-                if (lvz_iids.Count > 0)
-                {
-                    ::send_rpc(val.pinfo.sid, 56, { iidary = lvz_iids});   // send sprite leave zone to player
-                    if (val.pinfo.marryid > 0 && val.pinfo.mate_iid != 0)
-                    {
-                        foreach (iid in lvz_iids)
-                        {
-                            if (val.pinfo.mate_iid == iid)
-                            {
-                                val.set_mate_iid(0);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                var new_plys = val.get_new_inz_vsb_plys();
-                var new_mons = val.get_new_inz_vsb_mons();
-
-                //Utility.trace_info("player sid ["+val.pinfo.sid+"] on new plys:\n");
-                //sys.dumpobj(new_plys);
-
-                if (new_plys.Count > 0)
-                {
-                    var plys_data = { pary =[] };
-                    foreach (idx,ply in new_plys)
-                    {
-                        plys_data.pary.push(ply.pinfo);
-                    }
-
-                    ::send_rpc(val.pinfo.sid, 54, plys_data);   // send player enter zone to player
-
-                    //配偶是否进入视野
-                    if (val.pinfo.marryid > 0 && val.pinfo.mate_iid == 0)
-                    {
-                        foreach (ply in new_plys)
-                        {
-                            if (ply.pinfo.cid == val.pinfo.mate_cid)
-                            {
-                                val.set_mate_iid(ply.pinfo.iid);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (new_mons.Count > 0)
-                {
-                    var mons_data = { monsters =[] };
-                    foreach (idx,mon in new_mons)
-                    {
-                        if (!(mon.mondata.dieshow) && (mon.isdie()))
-                        {
-                            continue;
-                        }
-
-                        mons_data.monsters.push(mon.mondata);
-                    }
-
-                    ::send_rpc(val.pinfo.sid, 55, mons_data);   // send monster enter zone to player
-                }
-            }
-
-            val.apply_new_inz_spr();
-        }
-
-        // 更新触发器
-
-        var to_rmv_tmtrgids = [];
-        var to_rmv_areatrgids = [];
-        var to_rmv_kmtrgids = [];
-        var to_rmv_uitmtrgids = [];
-        var to_rmv_mistrgids = [];
-        var to_add_trgconf = [];
-        var to_rmv_othertrgids = [];
-
-        foreach (trid, trg in this.tmtriggers)
-        {
-            trg.tmleft -= tm_elasped_s;
-            if (trg.tmleft > 0)
-            {
-                continue;
-            }
-
-            // 触发
-
-            --trg.cnt;
-            trg.tmleft = trg.conf.timer[0].tm;
-
-            if (trg.cnt <= 0)
-            {
-                to_rmv_tmtrgids.push(trid);
-            }
-
-            this._trig_res(trg.conf, null, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-        }
-
-        foreach (trid, trg in this.areatriggers)
-        {
-            foreach (ply in map_players)
-            {
-                if (trg.area[0].sideid != 0 && trg.area[0].sideid != ply.pinfo.lvlsideid)
-                {
-                    continue;
-                }
-
-                if (ply.pinfo.x > trg.area[0].x && ply.pinfo.y > trg.area[0].y && ply.pinfo.x < trg.area[0].x + trg.area[0].width && ply.pinfo.y < trg.area[0].y + trg.area[0].height)
-                {
-                    // 触发
-
-                    if (!_trigger_attchk(ply, trg))
-                    {
-                        continue;
-                    }
-
-                    to_rmv_areatrgids.push(trid);
-
-                    this._trig_res(trg, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-                }
-            }
-        }
-
-        // 间隔判断是否经过了自然日（参考player的sync_db_data实现），若经过了自然日，则重置每日重复触发器
-        if ((cur_tm_s > this.last_check_tm + 5)) // 5秒一次
-        {
-            if (this.last_check_tm > 0)
-            {
-                var local_tm = sys.trans_local_time(cur_tm_s);
-                var last_trg_tm = sys.trans_local_time(this.last_check_tm);
-
-                if ((_compare_ymd_tm(local_tm, last_trg_tm) > 0))
-                {
-                    foreach (trid, trconf in this.trigger_conf)
-                    {
-                        if ("dalyrep" in trconf)
-                        {
-                            // 重置每日重复触发器
-                            //Utility.trace_info("reset daly trigger!\n");
-
-                            if (trid in this.tmtriggers) 
-                            {
-                                this.tmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.areatriggers) 
-                            {
-                                to_rmv_areatrgids.push(trid);
-                            }
-                            else if (trid in this.kmtriggers) 
-                            {
-                                this.kmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.useitmtriggers) 
-                            {
-                                this.useitmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.mistriggers) 
-                            {
-                                this.mistriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.othertriggers) 
-                            {
-                                this.othertriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else
-                            {
-                                to_add_trgconf.push(trid);
-                            }
-                        }
-                    }
-                }
-            }
-            this.last_check_tm = cur_tm_s;
-        }
-
-        foreach (trid in to_rmv_tmtrgids)
-        {
-            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
-        }
-        foreach (trid in to_rmv_areatrgids)
-        {
-            if (trid in this.areatriggers) delete this.areatriggers[trid];
-        }
-        foreach (trid in to_rmv_kmtrgids)
-        {
-            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-        }
-        foreach (trid in to_rmv_uitmtrgids)
-        {
-            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-        }
-        foreach (trid in to_rmv_mistrgids)
-        {
-            if (trid in this.mistriggers) delete this.mistriggers[trid];
-        }
-        foreach (trid in to_rmv_othertrgids)
-        {
-            if (trid in this.othertriggers) delete this.othertriggers[trid];
-        }
-        foreach (trid in to_add_trgconf)
-        {
-            this._add_triger(this.trigger_conf[trid]);
-        }
-
-        // 更新动态npc列表
-        for (var i = 0; i < this.add_npcs.Count; ++i)
-        {
-            var npc = this.add_npcs[i];
-            if (npc.dis_tm != 0 && npc.dis_tm <= cur_tm_s)
-            {
-                this.add_npcs.remove(i);
-                --i;
-                continue;
-            }
-        }
-
-        // 更新动态npc列表
-        for (var i = 0; i < this.add_links.Count; ++i)
-        {
-            var link = this.add_links[i];
-            if (link.dis_tm != 0 && link.dis_tm <= cur_tm_s)
-            {
-                this.add_links.remove(i);
-                --i;
-                continue;
-            }
-        }
-
-        // 更新地图技能状态对象
-        for (var i = 0; i < this.mapstats.Count; ++i)
-        {
-            var mapstat = this.mapstats[i];
-            var needrmv = _update_mapstat(mapstat, cur_tm_s, cur_clock_tm);
-            if (needrmv)
-            {
-                this.mapstats.remove(i);
-                --i;
-
-                // bcast add_npcs msg
-                this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = mapstat.id}]});
-
-        continue;
     }
 
 

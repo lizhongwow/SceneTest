@@ -1,4 +1,5 @@
 ﻿
+using SceneTestLib;
 using SceneTestLib.Confs;
 using System;
 using System.Collections.Generic;
@@ -29,14 +30,14 @@ namespace SceneTest
     //    }
     //}
 
-  
+
 
     public class damage_attr
     {
 
     }
 
-  
+
 
 
 
@@ -142,30 +143,7 @@ namespace SceneTest
         public int dmglnkper { get; set; }
     }
 
-    public interface IPoint2D
-    {
-        double x { get; set; }
-        double y { get; set; }
-    }
-    public class Point2D:IPoint2D
-    {
-        public double x { get; set; }
-        public double y { get; set; }
 
-        public Point2D() { }
-
-        public Point2D(int _x, int _y)
-        {
-            this.x = _x;
-            this.y = _y;
-        }
-
-        public Point2D(double _x, double _y)
-        {
-            this.x = _x;
-            this.y = _y;
-        }
-    }
 
     public class Skill_Cd
     {
@@ -262,7 +240,7 @@ namespace SceneTest
         /// </summary>
         /// <param name="sub_val"></param>
         /// <param name="sub_to_negtive">pk_v 是否可减至负值</param>
-        void sub_pk_v(int sub_val,bool sub_to_negtive=false);
+        void sub_pk_v(int sub_val, bool sub_to_negtive = false);
 
         bool is_justice();
 
@@ -283,6 +261,17 @@ namespace SceneTest
         /// </summary>
         /// <param name="sid"></param>
         void rmv_zone_player(int sid);
+
+        void respawn(int hp_percent, bool backtotown);
+
+        Level in_lvl { get; set; }
+
+        bool kp_asist_rec { get; set; }
+
+        bool ignore_team { get; set; }
+        bool ignore_clan { get; set; }
+
+        long db_last_update_tm { get; set; }
     }
 
     public class IBaseUnit : ISprite
@@ -350,6 +339,11 @@ namespace SceneTest
 
         public List<IBaseUnit> petmon_insts { get; set; }
 
+        public void flush_db_data(bool a ,bool b)
+        {
+
+        }
+
         public Dictionary<int, long> defend_tm_map
         {
             get
@@ -364,6 +358,71 @@ namespace SceneTest
         }
 
         public Dictionary<int, long> beatk_ply_cids
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Level in_lvl
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool kp_asist_rec
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool ignore_team
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool ignore_clan
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public long db_last_update_tm
         {
             get
             {
@@ -409,7 +468,7 @@ namespace SceneTest
 
         public player_skill_data get_skil_data(int skill_id)
         {
-            return 0;
+            throw new NotImplementedException();
         }
 
 
@@ -593,9 +652,14 @@ namespace SceneTest
         {
             throw new NotImplementedException();
         }
+
+        public void respawn(int hp_percent, bool backtotown)
+        {
+            throw new NotImplementedException();
+        }
     }
 
-    public interface IMapUnit:IPoint2D
+    public interface IMapUnit : IPoint2D
     {
         IMapUnit DefaultMapUnit { get; set; }
 
@@ -608,9 +672,10 @@ namespace SceneTest
         double lx { get; set; }
         double ly { get; set; }
         int lmpid { get; set; }
-        
+
         int sid { get; set; }
         int iid { get; set; }
+        int line { get; set; }
 
         int cid { get; set; }
 
@@ -745,6 +810,8 @@ namespace SceneTest
 
         int teamid { get; set; }
         int clanid { get; set; }
+
+        int llid { get; set; }
     }
 
     public class pinfo : IMapUnit
@@ -1412,6 +1479,32 @@ namespace SceneTest
             }
         }
 
+        public int line
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int llid
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public int lmpid
         {
             get
@@ -1931,6 +2024,84 @@ namespace SceneTest
                 throw new NotImplementedException();
             }
         }
+
+        double IMapUnit.lx
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        double IMapUnit.ly
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        double IPoint2D.x
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        double IMapUnit.x
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        double IPoint2D.y
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        double IMapUnit.y
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 
     public class monsterconf_att
@@ -2122,7 +2293,7 @@ namespace SceneTest
         public long start_tm { get; set; }
         public long during_tm { get; set; }
         public long end_tm { get; set; }
-        public skill_conf_jump jump { get; set; }
+        public jump_conf jump { get; set; }
         public Variant rpc { get; set; }
         public int percent { get; set; }
 
@@ -2173,7 +2344,7 @@ namespace SceneTest
     {
         public long start_tm { get; set; }
         public long end_tm { get; set; }
-        public skill_conf_teleport telep { get; set; }
+        public teleport_conf telep { get; set; }
         public Variant rpc { get; set; }
         public int percent { get; set; }
         public int dest_x { get; set; }
@@ -2444,7 +2615,7 @@ namespace SceneTest
         LPT_PVP = 2,    // PVP副本
     }
 
-    enum level_state_type
+    public enum level_state_type
     {
         LST_NONE = 1,    // 
         LST_PROCEED = 2,    // 副本进行中

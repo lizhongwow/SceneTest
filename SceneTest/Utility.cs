@@ -11,12 +11,22 @@ namespace SceneTest
 {
     public class Utility
     {
+        public static long time()
+        {
+            return DateTime.Now.ToBinary();
+        }
+
         public static map_conf get_map_conf(int map_id)
         {
             map_conf conf = null;
             ConfReader.Map_Confs.TryGetValue(map_id, out conf);
 
             return conf;
+        }
+
+        public static level_conf get_level_conf(int ltpid)
+        {
+
         }
 
         public static game_err_code check_target_type(IBaseUnit caster, IBaseUnit tar_sprite, int aff, map_pk_setting_type map_pk_seting)
@@ -167,6 +177,7 @@ namespace SceneTest
         {
             return normalize_vec2(point.x, point.y);
         }
+
         public static void trace_info(string info)
         {
 
