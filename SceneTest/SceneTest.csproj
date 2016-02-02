@@ -54,11 +54,8 @@
     <Compile Include="gameConfs.cs" />
     <Compile Include="grid_map.cs" />
     <Compile Include="IService.cs" />
-    <Compile Include="level.cs" />
-    <Compile Include="oldGrid_Map.cs" />
-    <Compile Include="oldLevel.cs" />
+    <Compile Include="Level.cs" />
     <Compile Include="Monster.cs" />
-    <Compile Include="oldPlayer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="r_player.cs" />

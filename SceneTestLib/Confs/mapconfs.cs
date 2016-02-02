@@ -22,10 +22,17 @@ namespace SceneTestLib.Confs
 
         public List<map_mon_conf> map_mon { get; set; }
 
+        public map_grd_conf map_grd { get; set; }
+
         public map_conf()
         {
             this.map_mon = new List<map_mon_conf>();
         }
+    }
+
+    public class map_grd_conf
+    {
+        public string file { get; set; }
     }
 
     public class map_mon_conf
