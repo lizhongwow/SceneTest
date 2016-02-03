@@ -220,6 +220,13 @@ namespace SceneTest
             return r.Next(start, end);
         }
 
+        public static double random(double start, double end)
+        {
+            Random r = new Random((int)DateTime.Now.ToBinary());
+
+            return (start + r.NextDouble() * (end - start));
+        }
+
         public static int random_section(int start, int section)
         {
             return random(start, start + section);

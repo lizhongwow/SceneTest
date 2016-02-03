@@ -6,6 +6,39 @@ using System.Text;
 
 namespace SceneTest
 {
+    public class _score_km
+    {
+        public int mid { get; set; }
+        public int cnt { get; set; }
+    }
+
+    public class ptfinbyside
+    {
+        public int pt { get; set; }
+        public int maxpt { get; set; }
+    }
+
+    public class score_km
+    {
+        public Dictionary<int, _score_km> _score_km = new Dictionary<int, _score_km>();
+        public int kmcnt { get; set; }
+
+        public bool ContainsKey(int id)
+        {
+            return _score_km.ContainsKey(id);
+        }
+    }
+
+    //public class death_pts {
+    //    public int cid { get; set; }
+    //    public int pt { get; set; }
+    //}
+
+
+    public class kmfin
+    {
+        public int cntleft { get; set; }
+    }
     public class Death_Pt
     {
         public int cid;
@@ -45,7 +78,7 @@ namespace SceneTest
             get; set;
         }
 
-        public Dictionary<int, int> kmfin
+        public Dictionary<int, kmfin> kmfin
         {
             get; set;
         }
@@ -100,6 +133,7 @@ namespace SceneTest
 
     public class Level : IService
     {
+
         public static Dictionary<int, Level_Info> level_infos = new Dictionary<int, Level_Info>();
 
         public Dictionary<int, IBaseUnit> sgplayers { get; set; }
@@ -110,7 +144,7 @@ namespace SceneTest
 
         //public Dictionary<int, IBaseUnit> dota { get; set; }
         public Dictionary<int, grid_map> maps { get; set; }
-
+        public Dictionary<int, long> plyrespawn_tms = new Dictionary<int, long>();
         public List<group_map> gp_maps { get; set; }
 
         public Dictionary<int, Dictionary<int, IBaseUnit>> enter_map_plys = new Dictionary<int, Dictionary<int, IBaseUnit>>();
@@ -123,6 +157,8 @@ namespace SceneTest
         public Dictionary<int, int> sideclan { get; set; }
 
         public level_conf lvl_conf { get; set; }
+
+        public score_km score_km = new score_km();
 
         public int llid { get; set; }
 
@@ -170,9 +206,13 @@ namespace SceneTest
 
         public HashSet<int> sid_ary { get; set; }
 
-        public Dictionary<int, int> kmfin = new Dictionary<int, int>();
+        public Dictionary<int, kmfin> kmfin = new Dictionary<int, kmfin>();
 
         public Dictionary<int, round_player> round_plys = new Dictionary<int, round_player>();
+
+        public Dictionary<int, ptfinbyside> ptfinbyside = new Dictionary<int, SceneTest.ptfinbyside>();
+        //public Dictionary<int, death_pts> death_pts = new Dictionary<int, SceneTest.death_pts>();
+        public int maxptside { get; set; }
 
         public bool tmfin = false;
 
@@ -188,6 +228,8 @@ namespace SceneTest
         public int death_hold_map = 0;
         public long preptm = 0;
         public bool rnk_batl = false;
+
+        public bool is_score_km = false;
 
         public static void enter_world(int sid, int line)
         {
@@ -2389,7 +2431,7 @@ namespace SceneTest
                         bool finished = true;
                         foreach (var km in gp_map.kmfin.Values)
                         {
-                            if (km > 0)
+                            if (km.cntleft > 0)
                             {
                                 finished = false;
                                 break;
@@ -2408,7 +2450,7 @@ namespace SceneTest
                     var finished = true;
                     foreach (var km in this.kmfin.Values)
                     {
-                        if (km > 0)
+                        if (km.cntleft > 0)
                         {
                             finished = false;
                             break;
@@ -2760,5 +2802,719 @@ namespace SceneTest
         {
             throw new NotImplementedException();
         }
+
+        public void on_km(IBaseUnit killer, IBaseUnit mon)
+        {
+            if (killer == null)
+                return;
+
+            IMapUnit pl = killer.get_pack_data();
+            IMapUnit mondata = mon.get_pack_data();
+
+            int mid = mondata.mid;
+            if (is_score_km)
+            {
+                if (!score_km.ContainsKey(mid))
+                    score_km._score_km[mid] = new _score_km() { mid = mid, cnt = 0 };
+
+                var kminfo = score_km._score_km[mid];
+                kminfo.cnt++;
+
+                score_km.kmcnt++; //算个总数
+
+                //::g_dump( "on_lvl_km score_km: ", score_km );
+            }
+
+            if (pl.lvlsideid > 0)
+            {
+                // 分阵营
+
+                //if (this.cltwar)
+                //{
+                //    // 领地争夺战
+                //    if (("kmfin" in this.cltwar) && mid == this.cltwar.kmfin.tar_mid)
+                //{
+                //        --this.cltwar.kmfin.cntleft;
+                //        if (this.cltwar.kmfin.cntleft < 0)
+                //        {
+                //            this.cltwar.kmfin.cntleft = 0;
+                //        }
+
+                //        // 通知客户端杀怪 lvl_km msg
+                //        if (killer.get_sprite_type() == map_sprite_type.MST_PLAYER)
+                //        {
+                //            this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = pl.cid, name = pl.name, mid = mid});
+                //        }
+                //        else
+                //        {
+                //            // 怪物杀死怪物
+                //            this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = 0, name = killer.monconf.name, mid = mid});
+                //        }
+                //    }
+                //}
+                //else if (this.clcqwar)
+                //{
+                //    // 帮派奴役战
+                //    if (mid == this.clcqwar.tar_mid)
+                //    {
+                //        --this.clcqwar.cntleft;
+                //        if (this.clcqwar.cntleft < 0)
+                //        {
+                //            this.clcqwar.cntleft = 0;
+                //        }
+
+                //        // 通知客户端杀怪 lvl_km msg
+                //        if (killer.get_sprite_type() == map_sprite_type.MST_PLAYER)
+                //        {
+                //            this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = pl.cid, name = pl.name, mid = mid});
+                //        }
+                //        else
+                //        {
+                //            // 怪物杀死怪物
+                //            this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = 0, name = killer.monconf.name, mid = mid});
+                //        }
+                //    }
+                //}
+                //    else if (pl.lvlsideid in this.kmfinbyside)
+                //{
+                //        local kmside = this.kmfinbyside[pl.lvlsideid];
+
+                //        if (mid in kmside)
+                //    {
+                //            local km = kmside[mid];
+
+                //            --km.cntleft;
+
+                //            // 通知客户端杀怪 lvl_km msg
+                //            if (killer.get_sprite_type() == map_sprite_type.MST_PLAYER)
+                //            {
+                //                this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = pl.cid, name = pl.name, mid = mid});
+                //            }
+                //            else
+                //            {
+                //                // 怪物杀死怪物
+                //                this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = 0, name = killer.monconf.name, mid = mid});
+                //            }
+
+                //            if (km.cntleft < 0)
+                //            {
+                //                km.cntleft = 0;
+                //            }
+
+                //            //_check_finish();
+                //        }
+                //    }
+                //else if (pl.lvlsideid in this.ptfinbyside)
+                //{
+                //        if (this.maxptside < 0 && ("kmpt" in mon.monconf))
+                //    {
+                //            local sidept = this.ptfinbyside[pl.lvlsideid];
+
+                //            // 杀怪得积分
+                //            sidept.pt += mon.monconf.kmpt;
+
+                //            // 通知客户端积分值变化 lvl_km msg
+                //            this.broad_cast_msg(249, { sideid = pl.lvlsideid, pt = sidept.pt});
+
+                //            if (sidept.pt >= sidept.maxpt)
+                //            {
+                //                this.maxptside = pl.lvlsideid;
+                //            }
+                //            // 胜利检查在update中进行
+                //        }
+                //    }
+            }
+            else if (killer.get_sprite_type() == map_sprite_type.MstPlayer)
+            {
+                //IMapUnit pl = killer.get_pack_data();
+
+                if (kmfin.ContainsKey(mid))
+                {
+                    if (this.gpmap_maxply > 0)
+                    {
+                        var gp_map = this.gp_maps[this.cid2gpid[pl.cid] - 1];
+                        var km = gp_map.kmfin[mid];
+                        --km.cntleft;
+                        if (km.cntleft < 0)
+                        {
+                            km.cntleft = 0;
+                        }
+                    }
+                    else
+                    {
+                        var km = this.kmfin[mid];
+                        --km.cntleft;
+                        if (km.cntleft < 0)
+                        {
+                            km.cntleft = 0;
+                        }
+                    }
+                    // 通知客户端杀怪 lvl_km msg
+                    //this.broad_cast_msg(249, { sideid = pl.lvlsideid, cid = pl.cid, name = ply.pinfo.name, mid = mid});
+
+                    //_check_finish();
+                }
+            }
+
+            if (killer.get_sprite_type() == map_sprite_type.MstPlayer)
+            {
+                //        if ("bcast_kill" in this.lvl_conf )
+                //{
+                //            local bcast_kill_conf = this.lvl_conf.bcast_kill[0];
+                //            foreach (monid in bcast_kill_conf.ids)
+                //            {
+                //                if (monid == mid)
+                //                {
+                //                    // 发送系统公告
+                //                    _broad_cast_sys_msg({ cid = pl.cid, name = pl.name, tp = bcast_msg_tp.LVL_MON_KILLED, par = mid, par1 = this.ltpid});
+                //                    break;
+                //                }
+                //            }
+                //        }
+            }
+            if (mon.get_pack_data().owner_cid > 0)
+            {
+                //    if (this.diff_lvl in map_need_km)
+                //{
+                //        foreach (mapid,kmdata in this.map_need_km[this.diff_lvl])
+                //    {
+                //            if (kmdata.mapid == mon.gmap.mapid)
+                //            {   //击杀地图需求怪，需广播到所有玩家
+                //                if (kmdata.mid == 0 || kmdata.mid == mon.mondata.mid)
+                //                {
+                //                    local moncnt = this.get_map_mon(mon.gmap.mapid);
+                //                    broad_cast_msg(237, { tp = 4, mapid = kmdata.mapid, cntleft = moncnt});
+                //                }
+                //                break;
+                //            }
+                //        }
+                //    }
+
+            }
+        }
+
+        public void on_kp(IBaseUnit killer, IBaseUnit tar_ply)
+        {
+            // 玩家角色被击杀
+
+            if (killer != null)
+            {
+                // 尝试更新每日必做任务
+                //_try_up_dmis(killer, "lvlkp", ltpid);
+            }
+
+            //if (no_kp_hexp)
+            //{
+            //    // 击杀不做任何处理
+            //    return;
+            //}
+
+            // 判断是否要变成ghost
+            //if (ghost_cnt > 0 || this.kumiteply)
+            //{
+            //    if (tar_ply.pinfo.cid in this.ghost_players)
+            //{
+            //        --this.ghost_players[tar_ply.pinfo.cid];
+            //        if (this.ghost_players[tar_ply.pinfo.cid] <= 0)
+            //        {
+            //            this.ghost_players[tar_ply.pinfo.cid] = 0;
+
+            //            if (!tar_ply.pinfo.ghost)
+            //            {
+            //                tar_ply.pinfo.ghost = true;
+
+            //            // 通知玩家成为ghost
+
+            //            // send lvl_side_info msg
+            //            ::send_rpc(tar_ply.pinfo.sid, 247, { ghost = true});
+
+            //                // bcast attchange msg
+            //                tar_ply.broad_cast_zone_msg(26, { iid = tar_ply.pinfo.iid, ghost = true});
+            //            }
+            //        }
+            //    }
+            //}
+
+            if (killer == null)
+            {
+                return;
+            }
+
+            IMapUnit killer_pl = killer.get_pack_data();
+
+            // 更新阵营积分值
+            if (this.maxptside < 0 && killer_pl.lvlsideid > 0)
+            {
+                if (this.ptfinbyside.ContainsKey(killer_pl.lvlsideid))
+                {
+                    var sidept = this.ptfinbyside[killer_pl.lvlsideid];
+
+                    var kp_pt = 1;// 增加积分值
+
+                    sidept.pt += kp_pt; // 增加积分值
+
+                    // 通知客户端积分值变化 lvl_km msg
+                    //this.broad_cast_msg(249, { sideid = killer.pinfo.lvlsideid, pt = sidept.pt});
+
+                    if (sidept.pt >= sidept.maxpt)
+                    {
+                        this.maxptside = killer_pl.lvlsideid;
+                    }
+                    // 胜利检查在update中进行
+                }
+
+            }
+
+            // 更新混战积分值
+            if (this.death_pts != null)
+            {
+                var kp_pt = 1;// 增加积分值
+
+                if (!this.death_pts.ContainsKey(killer_pl.cid))
+                {
+                    this.death_pts[killer_pl.cid] = new Death_Pt() { cid = killer_pl.cid, pt = kp_pt };
+                }
+                else
+                {
+                    this.death_pts[killer_pl.cid].pt += kp_pt;
+                }
+
+                // 通知客户端积分值变化通过kp模拟
+            }
+
+            // 计算荣誉值
+            //local hexp_add = 0;
+            //local hexp_add = 1;
+            //if(killer.pinfo.level - tar_ply.pinfo.level < 10)
+            //{
+            //    hexp_add = (tar_ply.pinfo.level/10).tointeger() - 1;
+            //    if(hexp_add <= 0) hexp_add = 1;
+            //}
+            //hexp_add = killer.add_hexp(hexp_add);
+
+            //if(hexp_add > 0)
+            //{
+            //    // 尝试更新排行活动值
+            //    _rnkact_on_pvphexp(killer, hexp_add);
+            //}
+
+            // 统计玩家击杀数
+            //    local skprec = null;
+            //    if (killer.pinfo.cid in this.kprec)
+            //{
+            //        skprec = this.kprec[killer.pinfo.cid];
+            //        ++skprec.kp;
+            //        ++skprec.ckp;
+            //        skprec.lvl_hexp += hexp_add;
+            //    }
+            //else
+            //{
+            //        local clanid = 0;
+            //        if ("clanid" in killer.pinfo)
+            //    {
+            //            clanid = killer.pinfo.clanid;
+            //        }
+            //        skprec = { cid = killer.pinfo.cid, sideid = killer.pinfo.lvlsideid, kp = 1, ckp = 1, dc = 0, ac = 0, lvl_hexp = hexp_add, bcasted = 0, clanid = clanid};
+            //        this.kprec[killer.pinfo.cid] < -skprec;
+            //    }
+
+            // 统计玩家被杀数
+            //    local tar_skprec = null;
+            //    //local tar_old_ckp = 0;
+            //    if (tar_ply.pinfo.cid in this.kprec)
+            //{
+            //        tar_skprec = this.kprec[tar_ply.pinfo.cid];
+            //        ++tar_skprec.dc;
+            //        //tar_old_ckp = tar_skprec.ckp;
+            //        tar_skprec.ckp = 0; // 连杀清零
+            //    }
+            //else
+            //{
+            //        local clanid = 0;
+            //        if ("clanid" in tar_ply.pinfo)
+            //    {
+            //            clanid = tar_ply.pinfo.clanid;
+            //        }
+            //        tar_skprec = { cid = tar_ply.pinfo.cid, sideid = tar_ply.pinfo.lvlsideid, kp = 0, ckp = 0, dc = 1, ac = 0, lvl_hexp = 0, bcasted = 0, clanid = clanid};
+            //        this.kprec[tar_ply.pinfo.cid] < -tar_skprec;
+            //    }
+
+            // 通知客户端击杀记录变化
+            // send mod_lvl_selfpvpinfo msg
+            //::send_rpc(killer.pinfo.sid, 238, { kp = skprec.kp/*, lvl_hexp=skprec.lvl_hexp*/});
+            //::send_rpc(tar_ply.pinfo.sid, 238, { dc = tar_skprec.dc});
+
+            // 判断击杀者连杀数是否需要广播
+            //    if (skprec.ckp in game_data_conf.general.pvp_combo_kp)
+            //{
+            //        local pvp_combo_kp_conf = game_data_conf.general.pvp_combo_kp[skprec.ckp];
+            //        if (pvp_combo_kp_conf.bcasttp == 1)
+            //        {
+            //            // 副本广播
+            //            // broad cast lvl_broadcast msg
+            //            this.broad_cast_msg(236, { tp = 1, cid = killer.pinfo.cid, name = killer.pinfo.name, ckp = skprec.ckp});
+            //        }
+            //        else if (pvp_combo_kp_conf.bcasttp == 2)
+            //        {
+            //            // 全服广播
+            //            _broad_cast_sys_msg({ cid = killer.pinfo.cid, name = killer.pinfo.name, tp = bcast_msg_tp.LVL_PVP_COMBO_KP, ltpid = ltpid, ckp = skprec.ckp});
+            //        }
+
+            //        if ("achive" in pvp_combo_kp_conf)
+            //    {
+            //            // 获得连杀成就
+            //            if (!killer.has_achive(pvp_combo_kp_conf.achive))
+            //            {
+            //                killer.pinfo.achives.push(pvp_combo_kp_conf.achive);
+
+            //            // 发送获得成就消息
+            //            // send gain_achive msg
+            //            ::send_rpc(killer.pinfo.sid, 5, { achive = pvp_combo_kp_conf.achive});
+            //            }
+            //        }
+
+            //        skprec.bcasted = skprec.ckp;
+            //    }
+            // 判断被杀者连杀数是否需要广播
+            //if (tar_skprec.bcasted)
+            //{
+            //    // 副本广播
+            //    // broad cast lvl_broadcast msg
+            //    this.broad_cast_msg(236, { tp = 2, cid = killer.pinfo.cid, name = killer.pinfo.name, tckp = tar_skprec.bcasted, tcid = tar_ply.pinfo.cid, tname = tar_ply.pinfo.name});
+
+            //    tar_skprec.bcasted = 0;
+            //}
+
+            // 刷新击杀排行榜
+            //local game_conf = get_general_game_conf();
+            //local idx = this.kpboard.Count - 1;
+            //if (game_conf.lvl_pvpinfo_cnt > 0 && (this.kpboard.Count < game_conf.lvl_pvpinfo_cnt || this.kpboard[idx].kp < skprec.kp))
+            //{
+            //    // 上榜了
+            //    local already_in = false;
+            //    for (; idx >= 0; --idx)
+            //    {
+            //        local cur_rec = this.kpboard[idx];
+            //        if (cur_rec.cid == skprec.cid)
+            //        {
+            //            already_in = true;
+            //            break;
+            //        }
+            //    }
+
+            //    if (!already_in)
+            //    {
+            //        this.kpboard.push(skprec);
+            //    }
+
+            //    local sort_func = function(a, b)
+            //        {
+            //        if (a.kp > b.kp)
+            //        {
+            //            return -1;
+            //        }
+            //        else if (a.kp == b.kp && a.dc <= b.dc)
+            //        {
+            //            return -1;
+            //        }
+
+            //        return 1;
+            //    }
+            //    this.kpboard.sort(sort_func);
+
+            //    for (; this.kpboard.Count > game_conf.lvl_pvpinfo_cnt;)
+            //    {
+            //        this.kpboard.pop();
+            //    }
+            //}
+
+            // 刷新助攻数据
+            //if (tar_ply.kp_asist_rec)
+            //{
+            //    foreach (asist_cid in tar_ply.beatk_ply_cids)
+            //    {
+            //        if (asist_cid == killer.pinfo.cid)
+            //        {
+            //            continue;
+            //        }
+
+            //        if (!(asist_cid in this.sgplayersbycid))
+            //    {
+            //            continue;
+            //        }
+
+            //        local asist_ply = this.sgplayersbycid[asist_cid];
+
+            //        // 统计玩家助攻
+            //        local asist_skprec = null;
+            //        if (asist_cid in this.kprec)
+            //    {
+            //            asist_skprec = this.kprec[asist_cid];
+            //            ++asist_skprec.ac;
+            //        }
+            //    else
+            //    {
+            //            local clanid = 0;
+            //            if ("clanid" in asist_ply.pinfo)
+            //        {
+            //                clanid = asist_ply.pinfo.clanid;
+            //            }
+            //            asist_skprec = { cid = asist_cid, sideid = asist_ply.pinfo.lvlsideid, kp = 0, ckp = 0, dc = 0, ac = 1, lvl_hexp = 0, bcasted = 0, clanid = clanid};
+            //            this.kprec[asist_cid] < -asist_skprec;
+            //        }
+
+            //    // 通知客户端助攻记录变化
+            //    // send mod_lvl_selfpvpinfo msg
+            //    ::send_rpc(asist_ply.pinfo.sid, 238, { ac = asist_skprec.ac});
+            //    }
+            //}
+        }
+
+        public void on_dmg(IBaseUnit atker, IBaseUnit tar_spr, double dmg)
+        {
+            // 造成伤害
+            //if (this.kumiteply)
+            //{
+            //    // 车轮战，计算积分
+            //    if (atker.get_sprite_type() != map_sprite_type.MST_PLAYER)
+            //    {
+            //        return;
+            //    }
+
+            //    if (!(atker.pinfo.cid in this.kumitefight_ply))
+            //{
+            //        return;
+            //    }
+
+            //    this.kumitefight_ply[atker.pinfo.cid].pt += (dmg / 100).tointeger();
+            //}
+            //else if (this.cltwar)
+            //{
+            //    // 攻城战，计算积分
+
+            //    if (atker.get_sprite_type() != map_sprite_type.MST_PLAYER)
+            //    {
+            //        return;
+            //    }
+
+            //    if (!("clanid" in atker.pinfo))
+            //{
+            //        return;
+            //    }
+
+            //    if (atker.pinfo.clanid == this.cltwar.owner_clanid)
+            //    {
+            //        return;
+            //    }
+
+            //    local ptper = this.cltwar.ptper;
+            //    if ((tar_spr.get_sprite_type() == map_sprite_type.MST_MONSTER) && (tar_spr.mondata.mid in this.cltwar.ptmon))
+            //{
+            //        ptper = this.cltwar.ptmon[tar_spr.mondata.mid].ptper;
+            //    }
+
+            //    local pt = (dmg / ptper).tointeger();
+            //    local totalpt = pt;
+
+            //    if (!(atker.pinfo.clanid in this.cltwar.clanpts))
+            //{
+            //        this.cltwar.clanpts[atker.pinfo.clanid] < -pt;
+            //    }
+            //else
+            //{
+            //        this.cltwar.clanpts[atker.pinfo.clanid] += pt;
+            //        totalpt = this.cltwar.clanpts[atker.pinfo.clanid];
+            //    }
+            //    if ((totalpt > this.cltwar.max_clanpt))
+            //    {
+            //        this.cltwar.max_clanpt = totalpt;
+            //        this.cltwar.max_clanid = atker.pinfo.clanid;
+            //    }
+
+            //    if (!(atker.pinfo.cid in this.cltwar.plypts))
+            //{
+            //        this.cltwar.plypts[atker.pinfo.cid] < - { pt = pt, clanid = atker.pinfo.clanid};
+            //    }
+            //else
+            //{
+            //        this.cltwar.plypts[atker.pinfo.cid].pt += pt;
+            //    }
+            //}
+        }
+
+        public Dictionary<int, IBaseUnit> _get_gp_map_win_plys(group_map gp_map, long cur_tm_s)
+        {
+            Dictionary<int, IBaseUnit> win_plys = new Dictionary<int, IBaseUnit>();
+
+            if (this.death_pts != null)
+            {
+                // 混战积分模式
+
+                // 按积分排序
+                List<Death_Pt> ply_ary = new List<Death_Pt>();
+                foreach (var val in this.death_pts.Values)
+                {
+                    if (!gp_map.plys.ContainsKey(val.cid))
+                        continue;
+
+                    int idx = 0;
+                    for (; idx < ply_ary.Count; ++idx)
+                    {
+                        if (val.pt >= ply_ary[idx].pt)
+                        {
+                            break;
+                        }
+                    }
+                    ply_ary.Insert(idx, val);
+                }
+
+                int i = 0;
+                for (; i < ply_ary.Count && i < this.death_ptconf.wincnt; ++i)
+                {
+                    var cid = ply_ary[i].cid;
+                    win_plys[cid] = gp_map.plys[cid];
+                }
+            }
+            else if (gp_map.win >= 0)
+            {
+                if (death_match)
+                {
+                    // 死亡模式
+                    if (this.sgplayersbyside.Count > 0 && gp_map.win > 0)
+                    {
+                        // 分阵营情况下，this.win为胜利方阵营id
+                        var win_side_players = this.sgplayersbyside[gp_map.win];
+                        foreach (var ply in win_side_players.Values)
+                        {
+                            int cid = ply.get_pack_data().cid;
+                            if (gp_map.plys.ContainsKey(cid))
+                            {
+                                win_plys[cid] = ply;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 混战情况下this.win为胜利者角色id
+                        if (gp_map.plys.ContainsKey(gp_map.win))
+                        {
+                            win_plys[gp_map.win] = gp_map.plys[gp_map.win];
+                        }
+                    }
+                }
+                //else if (this.kumiteply)
+                //{
+                //    // 车轮战模式，胜利者角色id
+                //    if (gp_map.win in gp_map.plys)
+                //{
+                //        win_plys[gp_map.win] < -gp_map.plys[gp_map.win];
+                //    }
+                //}
+                else
+                {
+                    win_plys = gp_map.plys;
+                    if (gp_map.win > 0)
+                    {
+                        // 胜利者有阵营
+                        var win_side_players = this.sgplayersbyside[gp_map.win];
+                        foreach (var ply in win_side_players.Values)
+                        {
+                            int cid = ply.get_pack_data().cid;
+                            if (gp_map.plys.ContainsKey(cid))
+                            {
+                                win_plys[cid] = ply;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return win_plys;
+        }
+
+
+        public void gp_map_finish(group_map gp_map, long cur_tm_s)
+        {
+            if (gp_map.fin)
+            {
+                return;
+            }
+            gp_map.fin = true;
+            gp_map.close_tm = cur_tm_s + 30;
+
+            int score = 0;
+            long cost_tm = cur_tm_s - this.start_tm;
+
+            var win_plys = _get_gp_map_win_plys(gp_map, cur_tm_s);
+
+
+
+            if (win_plys.Count > 0)
+            {
+                if (lvl_conf.score != null && lvl_conf.score.Count > 0)
+                {
+                    // 计算得分
+                    foreach (var score_conf in lvl_conf.score)
+                    {
+                        if (score_conf.tm >= cost_tm && score_conf.score > score)
+                        {
+                            score = score_conf.score;
+                        }
+                    }
+
+                    //sys.trace(sys.SLT_DETAIL, "score ["+score+"] upscore["+lvl_conf.upscore+"]\n");
+
+                    //if(score >= lvl_conf.upscore)
+                    //{
+                    // 更新角色关卡得分并升级
+
+                    //}
+                }
+
+
+            }
+            else
+            {
+            }
+
+        }
+
+        public void on_mon_respawn(IBaseUnit mon)
+        {
+            IMapUnit mondata = mon.get_pack_data();
+
+            int mid = mondata.mid;
+            //    if ("bcast_respawn" in this.lvl_conf )
+            //{
+            //        local bcast_respawn_conf = this.lvl_conf.bcast_respawn[0];
+            //        foreach (monid in bcast_respawn_conf.ids)
+            //        {
+            //            if (monid == mid)
+            //            {
+            //                // 发送系统公告
+            //                _broad_cast_sys_msg({ tp = bcast_msg_tp.LVL_MON_RESPAWN, par = mid, par1 = this.ltpid});
+            //                break;
+            //            }
+            //        }
+            //    }
+
+        }
+
+        public void on_ply_die(IBaseUnit ply)
+        {
+
+
+            if (this.plyrespawn_tm > 0)
+            {
+                ply.allow_respawn_tm_s = this.plyrespawn_tm;
+
+                int cid = ply.get_pack_data().cid;
+                this.plyrespawn_tms[cid] = Utility.time() + this.plyrespawn_tm;
+
+                // send self_attchange msg
+                //::send_rpc(ply.pinfo.sid, 32, { respawn_tms = ply.allow_respawn_tm_s});
+            }
+        }
+
     }
 }

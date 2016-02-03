@@ -30,7 +30,7 @@ namespace SceneTest
 
         public Dictionary<int, player_skill_data> map_skills = null;
 
-        public Dictionary<int, IBaseUnit> petmon_cache = null; // 缓存的战斗宠物实例，以mid为key
+        public Dictionary<int, List<IBaseUnit>> petmon_cache = null; // 缓存的战斗宠物实例，以mid为key
 
         public Dictionary<int, map_item> map_dpitms = new Dictionary<int, map_item>();
 
@@ -111,7 +111,7 @@ namespace SceneTest
             this.mistriggers = { };
             this.othertriggers = { };
             this.callmon_added = { };
-            this.petmon_cache = { };
+            this.petmon_cache = new Dictionary<int, List<IBaseUnit>>();
             this.add_npcs = [];
             this.add_links = [];
             this.mapstats = [];
@@ -3017,12 +3017,166 @@ namespace SceneTest
             pl.teleping = null;
         }
 
+        public void on_ply_dying(IBaseUnit ply, long cur_clock_tm)
+        {
+        }
+
+        public void on_km(IBaseUnit killer, int mid)
+        {
+            if (this.kmtriggers.Count <= 0)
+            {
+                return;
+            }
+
+            // 更新触发器
+
+            IMapUnit pl = null;
+            if (killer != null)
+            {
+                pl = killer.get_pack_data();
+            }
+
+            var to_rmv_tmtrgids = [];
+            var to_rmv_areatrgids = [];
+            var to_rmv_kmtrgids = [];
+            var to_rmv_uitmtrgids = [];
+            var to_rmv_mistrgids = [];
+            var to_add_trgconf = [];
+            var to_rmv_othertrgids = [];
+
+            var need_sync_km_cnt = false;
+
+            foreach (trid, trg in this.kmtriggers)
+        {
+                // 触发
+                if (trg.conf.km[0].mid != mid)
+                {
+                    continue;
+                }
+
+                if (pl && (trg.conf.km[0].sideid != 0 && trg.conf.km[0].sideid != pl.lvlsideid))
+                {
+                    continue;
+                }
+
+                if (killer && killer.get_sprite_type() == map_sprite_type.MstPlayer)
+                {
+                    if (!_trigger_attchk(killer, trg.conf))
+                    {
+                        continue;
+                    }
+                }
+
+                ++trg.kmcnt;
+
+                if ("showid" in trg.conf.km[0])
+            {
+                    need_sync_km_cnt = true;
+                }
+
+                if (trg.kmcnt < trg.tkmcnt)
+                {
+                    continue;
+                }
+
+                trg.kmcnt = 0;
+                --trg.cnt;
+
+                if (trg.cnt <= 0)
+                {
+                    to_rmv_kmtrgids.push(trid);
+                }
+
+                this._trig_res(trg.conf, killer, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+            }
+
+            if (need_sync_km_cnt)
+            {
+                // 通知杀怪触发器杀怪数更新
+                // send add npc msg
+                this.broadcast_map_rpc(6, { km_mid = mid});
+            }
+
+            foreach (trid in to_rmv_tmtrgids)
+            {
+                if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+            }
+            foreach (trid in to_rmv_areatrgids)
+            {
+                if (trid in this.areatriggers) delete this.areatriggers[trid];
+            }
+            foreach (trid in to_rmv_kmtrgids)
+            {
+                if (trid in this.kmtriggers) delete this.kmtriggers[trid];
+            }
+            foreach (trid in to_rmv_uitmtrgids)
+            {
+                if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+            }
+            foreach (trid in to_rmv_mistrgids)
+            {
+                if (trid in this.mistriggers) delete this.mistriggers[trid];
+            }
+            foreach (trid in to_rmv_othertrgids)
+            {
+                if (trid in this.othertriggers) delete this.othertriggers[trid];
+            }
+            foreach (trid in to_add_trgconf)
+            {
+                this._add_triger(this.trigger_conf[trid]);
+            }
+        }
+
 
         public born_pos get_born_area()
         {
             throw new NotImplementedException();
         }
 
+        public bool is_player_in_map(int sid)
+        {
+            return this.map_players_bysid.ContainsKey(sid);
+        }
+
+        public bool is_player_in_map_bycid(int cid)
+        {
+            return this.map_players_bycid.ContainsKey(cid);
+        }
+
+        /*      
+   *      |           *
+   *      |            *
+   * -----O------------*---->X
+   *      | \ )alpha   *
+   *      |  \        *
+   *      |   \      *
+   *      \/   \   *
+   *      Y     *
+   */
+        public Point2D valpoint_on_round(double center_x, double center_y, double radius, double alpha)
+        {
+            //Utility.trace_info("valpoint_on_round("+alpha+")\n");
+            Point2D ret = null;
+            double alpha_offset = 0;
+            for (int i = 0; i < 180; i += 5)
+            {
+                alpha_offset = (Math.PI * i / 180);
+                if (i % 2 == 0)
+                {
+                    alpha_offset = -alpha_offset;
+                }
+                var dest_x = (center_x + radius * Math.Cos(alpha + alpha_offset));
+                var dest_y = (center_y + radius * Math.Sin(alpha + alpha_offset));
+                var grid_pos = this.get_grid_by_pt(dest_x, dest_y);
+                if (grid_pos != null && is_grid_walkableEx((int)grid_pos.x, (int)grid_pos.y))
+                {
+                    ret = new Point2D(dest_x, dest_y);
+                    //Utility.trace_info("valpoint_on_round["+grid_pos.x+","+grid_pos.y+"], i="+i+" angle["+((alpha + alpha_offset)/(2*PI)*360)+"]\n");
+                    break;
+                }
+            }
+            return ret;
+        }
 
         public bool _is_pos_in_mvpath(int x, int y, IMapUnit pl, int dist_allow)
         {
@@ -3084,7 +3238,307 @@ namespace SceneTest
             return false;
         }
 
-        public void update(game_ref, long tm_elasped_s)
+        public IBaseUnit create_monster_byconf(map_mon_conf conf)
+        {
+
+        }
+
+        public IBaseUnit new_pet_mon(IBaseUnit ply, map_mon_conf monconf)
+        {
+            // 分配战斗宠物实例
+            IBaseUnit mon = null;
+            IMapUnit mondata = null;
+
+            List<IBaseUnit> list = null;
+            this.petmon_cache.TryGetValue(monconf.mid, out list);
+
+            if (list == null || list.Count <= 0)
+            {
+                mon = this.create_monster_byconf(monconf);
+                if (mon == null)
+                {
+                    Utility.trace_err("Err: in map [" + this.mapid + "] add_pet_mon mid [" + monconf.mid + "] create error!\n");
+                    return mon;
+                }
+
+                mon.gmap = this;
+
+                mondata = mon.get_pack_data();
+                this.map_mons[mondata.iid] = mon;
+                this.map_sprites[mondata.iid] = mon;
+
+                list = null;
+                if (this.map_mon_bymid.TryGetValue(mondata.mid, out list))
+                    list.Add(mon);
+                else
+                {
+                    list = new List<IBaseUnit>();
+                    list.Add(mon);
+                    this.map_mon_bymid[mondata.mid] = list;
+                }
+            }
+            else
+            {
+                mon = list.pop<IBaseUnit>();
+                mondata = mon.get_pack_data();
+            }
+
+            IMapUnit pl = ply.get_pack_data();
+            var ply_grid = this.get_grid_by_pt(pl.x, pl.y);
+            mondata.org_init_x = (int)ply_grid.x;
+            mondata.org_init_y = (int)ply_grid.y;
+            mon.owner_ply = ply;
+            mondata.owner_cid = pl.cid;
+            mon.respawn(100, false);
+
+            //var dest_pos = line_find_canwalk_grid(ply_grid.x, ply_grid.y, 3, 9);
+            //mon._move_to(dest_pos.x, dest_pos.y);
+
+            return mon;
+        }
+
+        public void release_pet_mon(IBaseUnit mon)
+        {
+            // 回收战斗宠物实例
+            IMapUnit mondata = mon.get_pack_data();
+            List<IBaseUnit> list = null;
+            if (this.petmon_cache.TryGetValue(mondata.mid, out list))
+                list.Add(mon);
+            else
+            {
+                list = new List<IBaseUnit>();
+                list.Add(mon);
+                this.petmon_cache.Add(mondata.mid, list);
+            }
+        }
+
+        public bool is_player_in_pc_zone(IBaseUnit ply)
+        {
+            if (this.map_conf.pk_zone.Count <= 0)
+                return false;
+
+            IMapUnit pl = ply.get_pack_data();
+            foreach (var z in map_conf.pk_zone)
+            {
+                if (pl.x > z.x && pl.x < z.x + z.width &&
+                    pl.y > z.y && pl.y < z.y + z.height)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="grid_x">格子x</param>
+        /// <param name="grid_y">格子y</param>
+        /// <param name="radian"></param>
+        /// <returns></returns>
+        public Point2D find_furthest_canwalk_grid(int grid_x, int grid_y, double radian)
+        {
+            var ori_cos = Math.Cos(radian);
+            var ori_sin = Math.Cos(radian);
+            var ori_tan = ori_sin / ori_cos;
+
+            var incr_x = ori_cos >= 0 ? 1 : -1;
+            var incr_y = ori_sin >= 0 ? 1 : -1;
+
+            var tmp = Math.Abs(ori_tan);
+            var not_cross = Math.Abs(tmp - 1) >= 0.01; //是否对角线  0.01为容错值
+            var main_y = tmp > 1;
+            //sys.trace( sys.SLT_ERR, "find_furthest_canwalk_grid radian=[" + radian + "]    ori_tan=[" + ori_tan + "]   ori_cos=[" + ori_cos + "]  ori_sin=[" + ori_sin + "] tmp=[" + tmp + "]\n" );
+            //以变化大的为基准  依次遍历经过的所有格子（与直线相交的）
+            var grid_fir = grid_x;
+            var grid_sec = grid_y;
+            var incr_fir = incr_x;
+            var incr_sec = incr_y;
+            var radio = ori_tan;
+            if (main_y)
+            {
+                grid_fir = grid_y;
+                grid_sec = grid_x;
+                incr_fir = incr_y;
+                incr_sec = incr_x;
+                radio = 1 / ori_tan;
+            }
+
+            var add_grid_fir = 0;
+            double add_grid_sec = 0;
+            while (true)
+            {
+                add_grid_fir += incr_fir;
+                tmp = (add_grid_fir * radio);
+                if (not_cross)
+                {
+                    if (tmp != add_grid_sec)
+                    {
+                        if (tmp - add_grid_sec != incr_sec)
+                        {
+                            //                        sys.trace( sys.SLT_ERR, "find_furthest_canwalk_grid radian=[" + radian + "] add_grid_fir=[" + add_grid_fir + "]  add_grid_sec=[" + add_grid_sec + "]  incr_fir=[" + incr_fir + "] incr_sec=[" + incr_sec + "]\n" );
+                            //                        sys.trace( sys.SLT_ERR, " grid_x=[" + grid_x + "] grid_y=[" + grid_y + "] ori_tan=[" + ori_tan + "] radio=[" + radio + "] tmp=[" + tmp + "] \n" );
+                        }
+
+                        add_grid_sec = tmp;
+                        add_grid_fir -= incr_fir; //退格
+                    }
+                }
+                else
+                {
+                    add_grid_sec += incr_sec;
+                }
+
+                //sys.trace( sys.SLT_ERR, "get_ray_end_grid main_y=[" + main_y + "] add_grid_fir=[" + add_grid_fir + "]  add_grid_sec=[" + add_grid_sec + "]  incr_fir=[" + incr_fir + "] incr_sec=[" + incr_sec + "]\n" );
+                if (main_y)
+                {
+                    if (!is_grid_walkableEx((int)(grid_sec + add_grid_sec), grid_fir + add_grid_fir))
+                    {
+                        break;
+                    }
+                    grid_x = (int)(grid_sec + add_grid_sec);
+                    grid_y = (int)(grid_fir + add_grid_fir);
+                }
+                else
+                {
+                    if (!is_grid_walkableEx(grid_fir + add_grid_fir, (int)(grid_sec + add_grid_sec)))
+                    {
+                        break;
+                    }
+                    grid_y = (int)(grid_sec + add_grid_sec);
+                    grid_x = grid_fir + add_grid_fir;
+                }
+            }
+
+            return new Point2D() { x = grid_x, y = grid_y };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from_x">格子x</param>
+        /// <param name="from_y">格子y</param>
+        /// <param name="minr"></param>
+        /// <param name="maxr"></param>
+        /// <param name="max_cnt"></param>
+        public Point2D line_find_canwalk_grid(int from_x, int from_y, double minr, double maxr, int max_cnt = 10)
+        {
+            var dist_x = Utility.random(minr, maxr);
+            var add_x = -1;
+            if (Utility.random(0, 2) > 0)
+            {
+                dist_x = -dist_x;
+                add_x = 1;
+            }
+            var dist_y = Utility.random(minr, maxr);
+            var add_y = -1;
+            if (Utility.random(0, 2) > 0)
+            {
+                dist_y = -dist_y;
+                add_y = 1;
+            }
+            int dest_x = from_x;
+            int dest_y = from_y;
+            while (dist_x != 0 && dist_y != 0)
+            {
+                dest_x = (int)(from_x + dist_x);
+                dest_y = (int)(from_y + dist_y);
+                if (is_grid_walkableEx(dest_x, dest_y))
+                {
+                    break;
+                }
+
+                if (is_grid_walkableEx(dest_x + add_x, dest_y))
+                {
+                    dest_x += add_x;
+                    break;
+                }
+
+                if (is_grid_walkableEx(dest_x, dest_y + add_y))
+                {
+                    dest_y += add_y;
+                    break;
+                }
+
+                max_cnt--;
+                if (max_cnt <= 0)
+                {
+                    dest_x = from_x;
+                    dest_y = from_y;
+                    break;
+                }
+
+                dist_x += add_x;
+                dist_y += add_y;
+            }
+
+            return new Point2D() { x = dest_x, y = dest_y };
+        }
+
+        public List<IBaseUnit> add_init(List<map_mon_conf> conf, long tm_elasped_s = 0)
+        {
+            List<IBaseUnit> added_mon = new List<IBaseUnit>();
+            int add_mon_cnt = 0;
+            int totalcnt = conf.Count;
+            foreach (map_mon_conf amconf in conf)
+            {
+                IBaseUnit m = this.create_monster_byconf(amconf);
+                if (m == null)
+                {
+                    Utility.trace_err("Err: in map [" + mapid + "] add_mon mid [" + amconf.mid + "] create error!\n");
+                    continue;
+                }
+
+                m.gmap = this;
+                IMapUnit mondata = m.get_pack_data();
+                m.on_pos_change(mondata.x, mondata.y);
+
+                this.map_mons[mondata.iid] = m;
+                this.map_sprites[mondata.iid] = m;
+
+                List<IBaseUnit> list = null;
+                if (this.map_mon_bymid.TryGetValue(mondata.mid, out list))
+                    list.Add(m);
+                else
+                {
+                    list = new List<IBaseUnit>();
+                    list.Add(m);
+
+                    this.map_mon_bymid.Add(mondata.mid, list);
+                }
+
+                if (amconf.sideid > 0)
+                    mondata.lvlsideid = amconf.sideid;
+                //m.set_add_conf(amconf);
+
+                added_mon.push(m);
+
+                ++add_mon_cnt;
+                if (add_mon_cnt >= totalcnt)
+                {
+                    break;
+                }
+
+
+                //Utility.trace_info("map [" + mapid +"] with ["+add_mon_cnt+"] add_mon created\n");
+            }
+
+            // TO DO : added trigger
+            //    if ("trigger" in  conf)
+            //{
+            //        //Utility.trace_info("tm_elasped_s [" + tm_elasped_s +"] \n");
+            //        this.init_trigger(conf.trigger, tm_elasped_s);
+            //    }
+
+            return added_mon;
+        }
+
+
+
+
+
+        public void update(IService game_ref, long tm_elasped_s)
         {
             //sys.trace(sys.SLT_SYS, "sg_map update\n");
 
@@ -3094,13 +3548,12 @@ namespace SceneTest
                 return;
             }
 
-            var cur_tm_s = sys.time();
-            var cur_clock_tm = sys.clock_time();
+            var cur_tm_s = Utility.time();
             var players_info = game_ref.sgplayers;
 
-            this.update_flys(cur_clock_tm);
+            //this.update_flys(cur_clock_tm);
 
-            this._update_dpitm(cur_tm_s);
+            //this._update_dpitm(cur_tm_s);
             //this._update_team_dpitm(cur_tm_s);
 
             //// update players
@@ -3133,13 +3586,13 @@ namespace SceneTest
             //}
 
             // update sprites
-            var time_trace_ms = sys.clock_time();
-            foreach (idx, val in this.map_sprites)
-        {
+            var time_trace_ms = Utility.time();
+            foreach (var val in this.map_sprites.Values)
+            {
                 // logical update
-                val.update(game_ref, cur_clock_tm, tm_elasped_s);
+                val.update(game_ref, cur_tm_s, tm_elasped_s);
             }
-            time_trace_ms = sys.clock_time() - time_trace_ms;
+            time_trace_ms = Utility.time() - time_trace_ms;
             if (time_trace_ms > 200)
             {
                 Utility.trace_info("map id[" + this.mapid + "] sprites len[" + this.map_sprites.Count + "] update cost time[" + time_trace_ms + "]\n");
@@ -3152,77 +3605,77 @@ namespace SceneTest
             //}
             this.calc_zone_sprite();
 
-            foreach (idx, val in this.map_sprites)
-        {
-                if (val.get_sprite_type() == map_sprite_type.MstPlayer)
-                {
-                    // player character
-                    var lvz_iids = val.get_levz_iids();
-                    if (lvz_iids.Count > 0)
-                    {
-                    ::send_rpc(val.pinfo.sid, 56, { iidary = lvz_iids});   // send sprite leave zone to player
-                        if (val.pinfo.marryid > 0 && val.pinfo.mate_iid != 0)
-                        {
-                            foreach (iid in lvz_iids)
-                            {
-                                if (val.pinfo.mate_iid == iid)
-                                {
-                                    val.set_mate_iid(0);
-                                    break;
-                                }
-                            }
-                        }
-                    }
+            //    foreach (idx, val in this.map_sprites)
+            //{
+            //        if (val.get_sprite_type() == map_sprite_type.MstPlayer)
+            //        {
+            //            // player character
+            //            var lvz_iids = val.get_levz_iids();
+            //            if (lvz_iids.Count > 0)
+            //            {
+            //            ::send_rpc(val.pinfo.sid, 56, { iidary = lvz_iids});   // send sprite leave zone to player
+            //                if (val.pinfo.marryid > 0 && val.pinfo.mate_iid != 0)
+            //                {
+            //                    foreach (iid in lvz_iids)
+            //                    {
+            //                        if (val.pinfo.mate_iid == iid)
+            //                        {
+            //                            val.set_mate_iid(0);
+            //                            break;
+            //                        }
+            //                    }
+            //                }
+            //            }
 
-                    var new_plys = val.get_new_inz_vsb_plys();
-                    var new_mons = val.get_new_inz_vsb_mons();
+            //            var new_plys = val.get_new_inz_vsb_plys();
+            //            var new_mons = val.get_new_inz_vsb_mons();
 
-                    //Utility.trace_info("player sid ["+val.pinfo.sid+"] on new plys:\n");
-                    //sys.dumpobj(new_plys);
+            //            //Utility.trace_info("player sid ["+val.pinfo.sid+"] on new plys:\n");
+            //            //sys.dumpobj(new_plys);
 
-                    if (new_plys.Count > 0)
-                    {
-                        var plys_data = { pary =[] };
-                        foreach (idx,ply in new_plys)
-                    {
-                            plys_data.pary.push(ply.pinfo);
-                        }
+            //            if (new_plys.Count > 0)
+            //            {
+            //                var plys_data = { pary =[] };
+            //                foreach (idx,ply in new_plys)
+            //            {
+            //                    plys_data.pary.push(ply.pinfo);
+            //                }
 
-                    ::send_rpc(val.pinfo.sid, 54, plys_data);   // send player enter zone to player
+            //            ::send_rpc(val.pinfo.sid, 54, plys_data);   // send player enter zone to player
 
-                        //配偶是否进入视野
-                        if (val.pinfo.marryid > 0 && val.pinfo.mate_iid == 0)
-                        {
-                            foreach (ply in new_plys)
-                            {
-                                if (ply.pinfo.cid == val.pinfo.mate_cid)
-                                {
-                                    val.set_mate_iid(ply.pinfo.iid);
-                                    break;
-                                }
-                            }
-                        }
-                    }
+            //                //配偶是否进入视野
+            //                if (val.pinfo.marryid > 0 && val.pinfo.mate_iid == 0)
+            //                {
+            //                    foreach (ply in new_plys)
+            //                    {
+            //                        if (ply.pinfo.cid == val.pinfo.mate_cid)
+            //                        {
+            //                            val.set_mate_iid(ply.pinfo.iid);
+            //                            break;
+            //                        }
+            //                    }
+            //                }
+            //            }
 
-                    if (new_mons.Count > 0)
-                    {
-                        var mons_data = { monsters =[] };
-                        foreach (idx,mon in new_mons)
-                    {
-                            if (!(mon.mondata.dieshow) && (mon.isdie()))
-                            {
-                                continue;
-                            }
+            //            if (new_mons.Count > 0)
+            //            {
+            //                var mons_data = { monsters =[] };
+            //                foreach (idx,mon in new_mons)
+            //            {
+            //                    if (!(mon.mondata.dieshow) && (mon.isdie()))
+            //                    {
+            //                        continue;
+            //                    }
 
-                            mons_data.monsters.push(mon.mondata);
-                        }
+            //                    mons_data.monsters.push(mon.mondata);
+            //                }
 
-                    ::send_rpc(val.pinfo.sid, 55, mons_data);   // send monster enter zone to player
-                    }
-                }
+            //            ::send_rpc(val.pinfo.sid, 55, mons_data);   // send monster enter zone to player
+            //            }
+            //        }
 
-                val.apply_new_inz_spr();
-            }
+            //        val.apply_new_inz_spr();
+            //    }
 
             // 更新触发器
 
@@ -3469,73 +3922,14 @@ namespace SceneTest
 
 
 
+
+
     public void init_path(path_conf)
     {
         foreach (path in path_conf)
         {
             this.paths[path.id] < -path;
         }
-    }
-
-    public void add_init(conf, tm_elasped_s= 0)
-    {
-        var added_mon = [];
-        if ("m" in conf)
-        {
-            var add_mon_cnt = 0;
-            var totalcnt = conf.m.Count;
-            if ("cnt" in conf ) totalcnt = conf.cnt;
-
-            if ("subply" in conf && conf.subply == 1 )
-            {
-                add_mon_cnt += this.get_plycnt();
-            }
-            foreach (amconf in conf.m)
-            {
-                var m = this.create_monster_byconf(amconf, "sg_monster");
-                if (m == null)
-                {
-                    Utility.trace_err("Err: in map [" + mapid + "] add_mon mid [" + amconf.mid + "] create error!\n");
-                    continue;
-                }
-
-                m.gmap = this;
-                m.on_pos_change(m.mondata.x, m.mondata.y);
-
-                this.map_mons[m.get_monster_iid()] < -m;
-                this.map_sprites[m.get_monster_iid()] < -m;
-
-                if (!(m.mondata.mid in this.map_mon_bymid))
-                {
-                    this.map_mon_bymid[m.mondata.mid] < - [m];
-                }
-                else
-                {
-                    this.map_mon_bymid[m.mondata.mid].push(m);
-                }
-
-                m.set_add_conf(amconf);
-
-                added_mon.push(m);
-
-                ++add_mon_cnt;
-                if (add_mon_cnt >= totalcnt)
-                {
-                    break;
-                }
-            }
-
-            //Utility.trace_info("map [" + mapid +"] with ["+add_mon_cnt+"] add_mon created\n");
-        }
-
-        // TO DO : added trigger
-        if ("trigger" in  conf)
-        {
-            //Utility.trace_info("tm_elasped_s [" + tm_elasped_s +"] \n");
-            this.init_trigger(conf.trigger, tm_elasped_s);
-        }
-
-        return added_mon;
     }
 
 
@@ -4070,64 +4464,6 @@ namespace SceneTest
         }
     }
 
-    public void new_pet_mon(IBaseUnit ply, monconf)
-    {
-        // 分配战斗宠物实例
-        var mon = null;
-
-        if ((monconf.mid in petmon_cache) && (petmon_cache[monconf.mid].Count > 0))
-        {
-            mon = petmon_cache[monconf.mid].pop();
-        }
-        else
-        {
-            mon = this.create_monster_byconf(monconf, "sg_monster");
-            if (mon == null)
-            {
-                Utility.trace_err("Err: in map [" + this.mapid + "] add_pet_mon mid [" + monconf.mid + "] create error!\n");
-                return mon;
-            }
-
-            mon.gmap = this;
-
-            this.map_mons[mon.get_monster_iid()] < -mon;
-            this.map_sprites[mon.get_monster_iid()] < -mon;
-
-            if (!(mon.mondata.mid in this.map_mon_bymid))
-            {
-                this.map_mon_bymid[mon.mondata.mid] < - [mon];
-            }
-            else
-            {
-                this.map_mon_bymid[mon.mondata.mid].push(mon);
-            }
-        }
-
-        var ply_grid = this.get_grid_by_pt(ply.pinfo.x, ply.pinfo.y);
-        mon.mondata.org_init_x = ply_grid.x;
-        mon.mondata.org_init_y = ply_grid.y;
-        mon.owner_ply = ply;
-        mon.mondata.owner_cid < -ply.pinfo.cid;
-        mon.respawn();
-
-        var dest_pos = line_find_canwalk_grid(ply_grid.x, ply_grid.y, 3, 9);
-        mon._move_to(dest_pos.x, dest_pos.y);
-
-        return mon;
-    }
-
-    public void release_pet_mon(IBaseUnit mon)
-    {
-        // 回收战斗宠物实例
-        if (!(mon.mondata.mid in petmon_cache))
-        {
-            petmon_cache[mon.mondata.mid] < - [mon];
-        }
-        else
-        {
-            petmon_cache[mon.mondata.mid].push(mon);
-        }
-    }
 
     public void add_npc_to_map(npc)
     {
@@ -4471,15 +4807,6 @@ namespace SceneTest
         this.broadcast_map_rpc(6, { blockzone = 2, bzrmv =[{ id = id}]});
     }
 
-    public void is_player_in_map(sid)
-    {
-        return (sid in this.map_players_bysid);
-    }
-
-    public void is_player_in_map_bycid(cid)
-    {
-        return (cid in this.map_players_bycid);
-    }
 
     //public void is_player_in_pk_zone(ply)
     //{
@@ -4500,24 +4827,6 @@ namespace SceneTest
     //    return false;
     //}
     //和平区域判断  先用pk_zone表示
-    public void is_player_in_pc_zone(ply)
-    {
-        if (!map_conf || !("pk_zone" in map_conf))
-        {
-            return false;
-        }
-
-        foreach (z in map_conf.pk_zone)
-        {
-            if (ply.pinfo.x > z.x && ply.pinfo.x < z.x + z.width &&
-                ply.pinfo.y > z.y && ply.pinfo.y < z.y + z.height)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     //--------------------------------------------------  掉落  start---------------------------------------------------------
     public void push_dropitm(ply, drop_id, position, kmtp, extra_itms= null, exdrops= null, extra_roll_itms= null, allpick= false) // extra_itms={eqp=[{id=xxx,flvl=xxx}], itm=[{id=xxx,cnt=xxx}]}
@@ -5730,170 +6039,7 @@ namespace SceneTest
 
     }
     //获取 射线上最远可行点
-    public void find_furthest_canwalk_grid(grid_x, grid_y, radian )
-    {
-        var ori_cos = cos(radian);
-        var ori_sin = sin(radian);
-        var ori_tan = ori_sin / ori_cos;
 
-        var incr_x = ori_cos >= 0 ? 1 : -1;
-        var incr_y = ori_sin >= 0 ? 1 : -1;
-
-        var tmp = fabs(ori_tan);
-        var not_cross = fabs(tmp - 1) >= 0.01; //是否对角线  0.01为容错值
-        var main_y = tmp > 1;
-        //sys.trace( sys.SLT_ERR, "find_furthest_canwalk_grid radian=[" + radian + "]    ori_tan=[" + ori_tan + "]   ori_cos=[" + ori_cos + "]  ori_sin=[" + ori_sin + "] tmp=[" + tmp + "]\n" );
-        //以变化大的为基准  依次遍历经过的所有格子（与直线相交的）
-        var grid_fir = grid_x;
-        var grid_sec = grid_y;
-        var incr_fir = incr_x;
-        var incr_sec = incr_y;
-        var radio = ori_tan;
-        if (main_y)
-        {
-            grid_fir = grid_y;
-            grid_sec = grid_x;
-            incr_fir = incr_y;
-            incr_sec = incr_x;
-            radio = 1 / ori_tan;
-        }
-
-        var add_grid_fir = 0;
-        var add_grid_sec = 0;
-        while (1)
-        {
-            add_grid_fir += incr_fir;
-            tmp = (add_grid_fir * radio);
-            if (not_cross)
-            {
-                if (tmp != add_grid_sec)
-                {
-                    if (tmp - add_grid_sec != incr_sec)
-                    {
-                        //                        sys.trace( sys.SLT_ERR, "find_furthest_canwalk_grid radian=[" + radian + "] add_grid_fir=[" + add_grid_fir + "]  add_grid_sec=[" + add_grid_sec + "]  incr_fir=[" + incr_fir + "] incr_sec=[" + incr_sec + "]\n" );
-                        //                        sys.trace( sys.SLT_ERR, " grid_x=[" + grid_x + "] grid_y=[" + grid_y + "] ori_tan=[" + ori_tan + "] radio=[" + radio + "] tmp=[" + tmp + "] \n" );
-                    }
-
-                    add_grid_sec = tmp;
-                    add_grid_fir -= incr_fir; //退格
-                }
-            }
-            else
-            {
-                add_grid_sec += incr_sec;
-            }
-
-            //sys.trace( sys.SLT_ERR, "get_ray_end_grid main_y=[" + main_y + "] add_grid_fir=[" + add_grid_fir + "]  add_grid_sec=[" + add_grid_sec + "]  incr_fir=[" + incr_fir + "] incr_sec=[" + incr_sec + "]\n" );
-            if (main_y)
-            {
-                if (!is_grid_walkableEx(grid_sec + add_grid_sec, grid_fir + add_grid_fir))
-                {
-                    break;
-                }
-                grid_x = grid_sec + add_grid_sec;
-                grid_y = grid_fir + add_grid_fir;
-            }
-            else
-            {
-                if (!is_grid_walkableEx(grid_fir + add_grid_fir, grid_sec + add_grid_sec))
-                {
-                    break;
-                }
-                grid_y = grid_sec + add_grid_sec;
-                grid_x = grid_fir + add_grid_fir;
-            }
-        }
-        return { x = grid_x, y = grid_y};
-    }
-
-    public void line_find_canwalk_grid(from_x, from_y, minr, maxr, max_cnt = 10)
-    {
-        var dist_x = Utility.random(minr, maxr);
-        var add_x = -1;
-        if (Utility.random(0, 2) > 0)
-        {
-            dist_x = -dist_x;
-            add_x = 1;
-        }
-        var dist_y = Utility.random(minr, maxr);
-        var add_y = -1;
-        if (Utility.random(0, 2) > 0)
-        {
-            dist_y = -dist_y;
-            add_y = 1;
-        }
-        var dest_x = from_x;
-        var dest_y = from_y;
-        while (dist_x != 0 && dist_y != 0)
-        {
-            dest_x = from_x + dist_x;
-            dest_y = from_y + dist_y;
-            if (is_grid_walkableEx(dest_x, dest_y))
-            {
-                break;
-            }
-
-            if (is_grid_walkableEx(dest_x + add_x, dest_y))
-            {
-                dest_x += add_x;
-                break;
-            }
-
-            if (is_grid_walkableEx(dest_x, dest_y + add_y))
-            {
-                dest_y += add_y;
-                break;
-            }
-
-            max_cnt--;
-            if (max_cnt <= 0)
-            {
-                dest_x = from_x;
-                dest_y = from_y;
-                break;
-            }
-
-            dist_x += add_x;
-            dist_y += add_y;
-        }
-
-        return { x = dest_x, y = dest_y};
-    }
-
-    /*      
-     *      |           *
-     *      |            *
-     * -----O------------*---->X
-     *      | \ )alpha   *
-     *      |  \        *
-     *      |   \      *
-     *      \/   \   *
-     *      Y     *
-     */
-    public Point2D valpoint_on_round(double center_x, double center_y, double radius, double alpha)
-    {
-        //Utility.trace_info("valpoint_on_round("+alpha+")\n");
-        Point2D ret = null;
-        double alpha_offset = 0;
-        for (int i = 0; i < 180; i += 5)
-        {
-            alpha_offset = (Math.PI * i / 180);
-            if (i % 2 == 0)
-            {
-                alpha_offset = -alpha_offset;
-            }
-            var dest_x = (center_x + radius * Math.Cos(alpha + alpha_offset));
-            var dest_y = (center_y + radius * Math.Sin(alpha + alpha_offset));
-            var grid_pos = this.get_grid_by_pt(dest_x, dest_y);
-            if (grid_pos != null && is_grid_walkableEx((int)grid_pos.x, (int)grid_pos.y))
-            {
-                ret = new Point2D(dest_x, dest_y);
-                //Utility.trace_info("valpoint_on_round["+grid_pos.x+","+grid_pos.y+"], i="+i+" angle["+((alpha + alpha_offset)/(2*PI)*360)+"]\n");
-                break;
-            }
-        }
-        return ret;
-    }
 
 
 
@@ -6182,170 +6328,6 @@ namespace SceneTest
         }
     }
 
-    public void on_ply_dying(IBaseUnit ply, long cur_clock_tm)
-    {
-        if (this.blvlmap)
-        {
-            var lvl_conf = this.worldsvr.lvl_conf;
-            if ("ply_die_act" in lvl_conf )
-            {
-                var ply_die_act_conf = lvl_conf.ply_die_act[0];
-                if ("act_skill" in ply_die_act_conf )
-                {
-                    foreach (act in ply_die_act_conf.act_skill)
-                    {
-                        // 触发技能
-                        var skil_conf = get_skil_skill_desc(act.sid);
-                        if (!skil_conf)
-                        {
-                            continue;
-                        }
-                        var tar_iid = 0;
-                        if ("selftar" in act )
-                        {
-                            tar_iid = ply.pinfo.iid;
-                        }
-                        else
-                        {
-                            // 选择当前攻击玩家
-                            if ("atking" in ply.pinfo )
-                            {
-                                tar_iid = ply.pinfo.atking.tar_iid
-                            }
-                        }
-                        switch (skil_conf.tar_tp)
-                        {
-                            case (int)skill_type.ST_SELF:
-                                this.do_cast_self_skill(ply, { start_tm = cur_clock_tm, sid = act.sid}, true, false);
-                                break;
-                            case (int)skill_type.ST_TARGET:
-                                if (tar_iid > 0)
-                                {
-                                    this.do_cast_target_skill(ply, { start_tm = cur_clock_tm, sid = act.sid, to_iid = tar_iid}, true, false);
-                                }
-                                break;
-                            case (int)skill_type.ST_GROUND:
-                                if (tar_iid > 0)
-                                {
-                                    if (tar_iid in this.map_sprites)
-                                {
-                                        var pl = this.map_sprites[tar_iid].get_pack_data();
-                                        this.do_cast_ground_skill(ply, { start_tm = cur_clock_tm, sid = act.sid, x = pl.x, y = pl.y}, true, false);
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public void on_km(IBaseUnit killer, int mid)
-    {
-        if (this.kmtriggers.Count <= 0)
-        {
-            return;
-        }
-
-        // 更新触发器
-
-        var pl = null;
-        if (killer)
-        {
-            pl = killer.get_pack_data();
-        }
-
-        var to_rmv_tmtrgids = [];
-        var to_rmv_areatrgids = [];
-        var to_rmv_kmtrgids = [];
-        var to_rmv_uitmtrgids = [];
-        var to_rmv_mistrgids = [];
-        var to_add_trgconf = [];
-        var to_rmv_othertrgids = [];
-
-        var need_sync_km_cnt = false;
-
-        foreach (trid, trg in this.kmtriggers)
-        {
-            // 触发
-            if (trg.conf.km[0].mid != mid)
-            {
-                continue;
-            }
-
-            if (pl && (trg.conf.km[0].sideid != 0 && trg.conf.km[0].sideid != pl.lvlsideid))
-            {
-                continue;
-            }
-
-            if (killer && killer.get_sprite_type() == map_sprite_type.MstPlayer)
-            {
-                if (!_trigger_attchk(killer, trg.conf))
-                {
-                    continue;
-                }
-            }
-
-            ++trg.kmcnt;
-
-            if ("showid" in trg.conf.km[0])
-            {
-                need_sync_km_cnt = true;
-            }
-
-            if (trg.kmcnt < trg.tkmcnt)
-            {
-                continue;
-            }
-
-            trg.kmcnt = 0;
-            --trg.cnt;
-
-            if (trg.cnt <= 0)
-            {
-                to_rmv_kmtrgids.push(trid);
-            }
-
-            this._trig_res(trg.conf, killer, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-        }
-
-        if (need_sync_km_cnt)
-        {
-            // 通知杀怪触发器杀怪数更新
-            // send add npc msg
-            this.broadcast_map_rpc(6, { km_mid = mid});
-        }
-
-        foreach (trid in to_rmv_tmtrgids)
-        {
-            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
-        }
-        foreach (trid in to_rmv_areatrgids)
-        {
-            if (trid in this.areatriggers) delete this.areatriggers[trid];
-        }
-        foreach (trid in to_rmv_kmtrgids)
-        {
-            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-        }
-        foreach (trid in to_rmv_uitmtrgids)
-        {
-            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-        }
-        foreach (trid in to_rmv_mistrgids)
-        {
-            if (trid in this.mistriggers) delete this.mistriggers[trid];
-        }
-        foreach (trid in to_rmv_othertrgids)
-        {
-            if (trid in this.othertriggers) delete this.othertriggers[trid];
-        }
-        foreach (trid in to_add_trgconf)
-        {
-            this._add_triger(this.trigger_conf[trid]);
-        }
-    }
 
     public void trig_other_triger(Variant trig_spr, int trigid)
     {

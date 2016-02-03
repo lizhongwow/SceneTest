@@ -21,13 +21,23 @@ namespace SceneTestLib.Confs
         public int immrespawn { get; set; }
 
         public List<map_mon_conf> map_mon { get; set; }
+        public List<pk_zone_conf> pk_zone { get; set; }
 
         public map_grd_conf map_grd { get; set; }
 
         public map_conf()
         {
             this.map_mon = new List<map_mon_conf>();
+            this.pk_zone = new List<pk_zone_conf>();
         }
+    }
+
+    public class pk_zone_conf
+    {
+        public int x { get; set; }
+        public int y { get; set; }
+        public int width { get; set; }
+        public int height { get; set; }
     }
 
     public class map_grd_conf
@@ -45,6 +55,8 @@ namespace SceneTestLib.Confs
         public int r_x { get; set; }
         public int r_y { get; set; }
         public int spwan_time { get; set; }
+
+        public int sideid { get; set; }
     }
 
     public class born_pos

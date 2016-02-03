@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SceneTestLib.Confs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ namespace SceneTest
 {
     public class gameConfs
     {
-        public static mapconf get_map_conf(int mid)
+        public static map_conf get_map_conf(int mid)
         {
             return null;
         }

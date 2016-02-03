@@ -71,7 +71,7 @@ namespace SceneTest
             list.Add(element);
 
             return list;
-        }
+        }        
 
         public static List<T> slice<T>(this List<T> list, int start_index)
         {
@@ -272,6 +272,10 @@ namespace SceneTest
         bool ignore_clan { get; set; }
 
         long db_last_update_tm { get; set; }
+
+        long allow_respawn_tm_s { get; set; }
+
+        void update(IService service, long cur_time,long time_elapsed);
     }
 
     public class IBaseUnit : ISprite
@@ -423,6 +427,19 @@ namespace SceneTest
         }
 
         public long db_last_update_tm
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public long allow_respawn_tm_s
         {
             get
             {
@@ -657,6 +674,11 @@ namespace SceneTest
         {
             throw new NotImplementedException();
         }
+
+        public void update(IService service, long cur_time, long time_elapsed)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public interface IMapUnit : IPoint2D
@@ -669,6 +691,9 @@ namespace SceneTest
         double x { get; set; }
         double y { get; set; }
 
+        int org_init_x { get; set; }
+        int org_init_y { get; set; }
+
         double lx { get; set; }
         double ly { get; set; }
         int lmpid { get; set; }
@@ -680,6 +705,8 @@ namespace SceneTest
         int cid { get; set; }
 
         int mid { get; set; }
+
+        int owner_cid { get; set; }
 
         int lvlsideid { get; set; }
 
@@ -1700,6 +1727,45 @@ namespace SceneTest
             }
         }
 
+        public int org_init_x
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int org_init_y
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int owner_cid
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public int pkatk
         {
             get
@@ -2190,16 +2256,6 @@ namespace SceneTest
         public monsterconf_ai ai = new monsterconf_ai();
 
 
-    }
-
-    public class map_monster_conf
-    {
-        public int mid { get; set; }
-    }
-
-    public class mapconf
-    {
-        public List<map_monster_conf> m { get; set; }
     }
 
     public interface IConf
