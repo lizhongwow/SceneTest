@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SceneTestLib;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -19,8 +20,6 @@ namespace SceneTest
 
         public int mid { get; set; }
         public int iid { get; set; }
-        public int x { get; set; }
-        public int y { get; set; }
         public int face { get; set; }
         public int level { get; set; }    // 怪物等级            
 
@@ -98,10 +97,10 @@ namespace SceneTest
         public int r_x { get; set; }
         public int r_y { get; set; }
 
-        public int skill_gen_cd { get; set; } // 技能公共cd时间
-        public int skill_gen_cdst { get; set; }// 技能公共cd起始时间
+        public long skill_gen_cd { get; set; } // 技能公共cd时间
+        public long skill_gen_cdst { get; set; }// 技能公共cd起始时间
         //public int skill_fly= {},
-        public int last_atk_tm { get; set; }
+        public long last_atk_tm { get; set; }
         public int lvlsideid { get; set; }          // 副本中阵营id
 
         public bool isdie { get; set; }
@@ -118,7 +117,8 @@ namespace SceneTest
         public int init_x { get; set; }    // 初始位置
         public int init_y { get; set; }    // 初始位置
         public int revange { get; set; }  // 是否反击
-        public double respawn_tm { get; set; }  // 复活时间
+        public long respawn_tm { get; set; }  // 复活时间
+        public long conf_respawn_tm { get; set; }
         public bool dieshow { get; set; }// 是否死亡后显示尸体
         public bool wrdboss { get; set; }// 是否是世界boss（世界boss只在1线出现）
         public bool atk_oth_mon { get; set; } // 是否主动攻击其他怪物
@@ -160,704 +160,277 @@ namespace SceneTest
 
         public IMapUnit DefaultMapUnit
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return new MonsterData(); }
         }
 
         public int pk_v
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int map_id
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.y
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public double lx
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public double ly
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int lmpid
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int sid
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public bool in_pczone
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public UnitState states
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public List<BState> bstates
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public holding holding
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public casting casting
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public teleping teleping
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
-        long IMapUnit.skill_gen_cd
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        long IMapUnit.skill_gen_cdst
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
 
         public List<Point2D> last_mvpts
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
-        long IMapUnit.last_atk_tm
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
 
         public int pkatkrate
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkmisrate
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int exp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkdef
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public Dictionary<int, int> addResist
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public Dictionary<int, int> skill_cd
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public atk_type atktp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int matk_min
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int matk_max
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkmatk
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int atk_min
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int atk_max
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkatk
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkdmg_red
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int hpsuck
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int max_hp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int dp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int max_dp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int mp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int max_mp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int hpsuck_dmgmul
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkatk_dmg_mul
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkigdp_rate
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int pkigdp_rate_debuffs
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public bool cfmv
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int full_hp_rate
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int full_mp_rate
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public pk_state_type pk_state
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public bool ghost
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int kp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int cur_kp
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int teamid
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
         public int clanid
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
-        double IPoint2D.x
+        public double x
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
         }
 
-        double IPoint2D.y
+        public double y
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get; set;
+        }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
+        public int line
+        {
+            get; set;
+        }
+
+        public int owner_cid
+        {
+            get; set;
+        }
+
+        public int llid
+        {
+            get; set;
+        }
+
+        public int grid_x
+        {
+            get; set;
+        }
+
+        public int grid_y
+        {
+            get;
+
+            set;
         }
     }
     public class Monster : IBaseUnit
@@ -926,7 +499,7 @@ namespace SceneTest
             set;
         }
 
-        public int running_tm
+        public long running_tm
         {
             get;
             set;
@@ -938,19 +511,19 @@ namespace SceneTest
             set;
         }
 
-        public int check_pos_tm
+        public long check_pos_tm
         {
             get;
             set;
         } // 检查位置是否合法间隔时间
 
-        public double respawn_tm
+        public long respawn_tm
         {
             get;
             set;
         }
 
-        public double die_tm
+        public long die_tm
         {
             get;
             set;
@@ -982,10 +555,13 @@ namespace SceneTest
 
         #endregion
 
-        public Monster()
+        public Monster(monsterconf conf)
         {
+            this.monconf = conf;
             this.mondata = new MonsterData();
             this.mondata.mid = this.monster_config.mid;
+
+            initbattleAttrs();
         }
 
         public void initbattleAttrs()
@@ -1035,10 +611,38 @@ namespace SceneTest
             this.monconf = m_c;
         }
 
+        public void set_location(double x,double y)
+        {
+            this.mondata.x = x;
+            this.mondata.y = y;
+
+            this.on_pos_change(x, y);
+        }
+
+        public override void on_pos_change(double x, double y)
+        {
+            this.mondata.grid_x = (int)(x / game_const.map_grid_pixel);
+            this.mondata.grid_y = (int)(x / game_const.map_grid_pixel);
+
+            base.on_pos_change(x, y);
+        }
+
         public void set_origin_location(int x, int y)
         {
             this.origin_x = x;
             this.origin_y = y;
+        }
+
+        public override void set_lvlside(int sideid)
+        {
+            this.mondata.lvlsideid = sideid;
+            base.set_lvlside(sideid);
+        }
+
+        public override void set_conf_respawn_tm(long _respawn_tm)
+        {
+            this.mondata.conf_respawn_tm = _respawn_tm;
+            base.set_conf_respawn_tm(_respawn_tm);
         }
 
         public void set_last_skill_tm(int skillid, int last_tm)
@@ -1203,8 +807,8 @@ namespace SceneTest
             {
                 if (this.mondata.patrol != null && this.mondata.patrol.tracing == null)
                 {
-                    this.mondata.patrol.movto.trinitx = this.mondata.x;
-                    this.mondata.patrol.movto.trinity = this.mondata.y;
+                    this.mondata.patrol.movto.trinitx = (int)this.mondata.x;
+                    this.mondata.patrol.movto.trinity = (int)this.mondata.y;
                     this.mondata.patrol.movto.tracing = true;
                 }
 
@@ -1219,7 +823,7 @@ namespace SceneTest
             return true;
         }
 
-        public void ondmg(oldPlayer atker, int dmg)
+        public void ondmg(IBaseUnit atker, int dmg)
         {
             if (!this.shkilawd)
                 return;
@@ -1227,7 +831,7 @@ namespace SceneTest
             if (this.get_sprite_type() == map_sprite_type.MstMonster)
                 return;
 
-            int cid = atker.pinfo.cid;
+            int cid = atker.get_pack_data().cid;
             if (this.dmglist.ContainsKey(cid))
                 this.dmglist[cid] += dmg;
             else
@@ -1379,7 +983,7 @@ namespace SceneTest
                 if (null == sx.desc)
                     continue;
 
-                hate_target = gmap.getSprite(sx.frm_iid);
+                hate_target = gmap.get_sprite_by_iid(sx.frm_iid);
 
                 if (null == hate_target)
                     continue;
@@ -1480,7 +1084,7 @@ namespace SceneTest
 
         public bool _atk_target_in_range()
         {
-            IBaseUnit target = this.gmap.getSprite(this.mondata.atking.tar_iid);
+            IBaseUnit target = this.gmap.get_sprite_by_iid(this.mondata.atking.tar_iid);
 
             if (null == target)
                 return false;
@@ -1544,13 +1148,13 @@ namespace SceneTest
                     }
                 }
 
-                if (ax.trig.Count > 0)
-                {
-                    foreach (int tx in ax.trig)
-                    {
-                        this.gmap.trig_other_triger(this, tx);
-                    }
-                }
+                //if (ax.trig.Count > 0)
+                //{
+                //    foreach (int tx in ax.trig)
+                //    {
+                //        this.gmap.trig_other_triger(this, tx);
+                //    }
+                //}
 
                 if (ax.x > 0 && ax.y > 0)
                 {
@@ -1609,9 +1213,85 @@ namespace SceneTest
             this.next_resume_tm = c_tm + 3000 * 1000;
         }
 
-        public void _do_next_castsk(long c_tm)
+        public void _do_next_castsk(long cur_clock_tm)
         {
+            if (cur_clock_tm < this.mondata.skill_gen_cd)
+                return;
 
+            if (this.mondata.next_castsk == null)
+                return;
+
+
+            var act = this.mondata.next_castsk;
+            this.mondata.next_castsk = null;
+
+
+            var skil_conf = Utility.get_skil_skill_desc(act.castsk);
+            if (skil_conf == null)
+                return;
+
+            bool cast_res = false;
+
+            int tar_iid = 0;
+            if (act.seltar > 0)
+            {
+                // 随机选择一名玩家                
+                List<int> tars = this.hatelist.Keys.ToList();
+                if (tars.Count <= 0)
+                    return;
+
+                var pick = Utility.random(0, tars.Count);
+                tar_iid = tars[pick];
+            }
+            else
+            {
+                // 选择当前攻击玩家
+                if (this.mondata.atking != null)
+                {
+                    tar_iid = this.mondata.atking.tar_iid;
+                }
+            }
+
+            //sys.trace( sys.SLT_DETAIL, "act.castsk = " + act.castsk + " tar_iid =" + tar_iid + "\n" );
+            Variant rpc = new Variant();
+            switch (skil_conf.tar_tp)
+            {
+                case (int)skill_type.ST_SELF:
+                    rpc["start_tm"] = cur_clock_tm;
+                    rpc["sid"] = act.castsk;
+                    cast_res = gmap.do_cast_self_skill(this, rpc, true, false);
+                    break;
+                case (int)skill_type.ST_TARGET:
+                    if (tar_iid > 0)
+                    {
+                        rpc["start_tm"] = cur_clock_tm;
+                        rpc["sid"] = act.castsk;
+                        rpc["to_iid"] = tar_iid;
+                        cast_res = gmap.do_cast_target_skill(this, rpc, true, false);
+                    }
+                    break;
+                case (int)skill_type.ST_GROUND:
+                    if (tar_iid > 0)
+                    {
+                        IBaseUnit target = this.gmap.get_sprite_by_iid(tar_iid);
+                        if (null != target)
+                        {
+                            IMapUnit tar_pl = target.get_pack_data();
+                            rpc["start_tm"] = cur_clock_tm;
+                            rpc["sid"] = act.castsk;
+                            rpc["x"] = (int)(tar_pl.x / game_const.map_grid_pixel);
+                            rpc["y"] = (int)(tar_pl.y / game_const.map_grid_pixel);
+                            cast_res = gmap.do_cast_ground_skill(this, rpc, true, false);
+                        }
+                    }
+                    break;
+            }
+
+            //if(!cast_res)
+            //{
+            //    sys.trace(sys.SLT_DETAIL, "mon iid["+mondata.iid+"] castsk ["+act.castsk+"] act.cnt["+act.cnt+"] cast_res["+cast_res+"]\n");
+            //}
+            return;
         }
 
         public bool _move_to(int x, int y)
@@ -1628,6 +1308,16 @@ namespace SceneTest
 
             if (path.Count <= 0)
                 return false;
+
+            this.mondata.moving = new moving()
+            {
+                start_tm = Utility.time(),
+                pts = path,
+                to_x = x,
+                to_y = y,
+                float_x = (this.mondata.x),
+                float_y = (this.mondata.y)
+            };
 
             return true;
         }
@@ -1726,9 +1416,9 @@ namespace SceneTest
             if (this.collect_tar > 0)
                 return;
 
-            oldSkill.update_pl_state(now, this);
+            Skill.update_pl_state(now, this);
 
-            long tm_left = this.gmap.update_pl_move(this, now);
+            long tm_left = grid_map.update_pl_move(this, now);
 
             if (this.mondata.moving == null)
             {
@@ -1736,7 +1426,7 @@ namespace SceneTest
                 {
                     this.mondata.atking.trace_tm_left = tm_left;
                     grid_map.update_pl_atk_tracing(this, now);
-                    this.gmap.update_pl_move(this, now);
+                    grid_map.update_pl_move(this, now);
                 }
             }
 
@@ -1841,20 +1531,20 @@ namespace SceneTest
             _do_next_castsk(now);
             grid_map.update_pl_atk(this, now);
 
-            grid_map.update_skill_casting(this, this.mondata, now);
-            grid_map.update_skill_holding(this, this.mondata, now);
-            grid_map.update_jumping(this, this.mondata, now);
-            grid_map.update_teleping(this, this.mondata, now);
+            gmap.update_skill_casting(this, this.mondata, now);
+            gmap.update_skill_holding(this, this.mondata, now);
+            gmap.update_jumping(this, this.mondata, now);
+            gmap.update_teleping(this, this.mondata, now);
 
             if (this.mondata.atking != null)
             {
                 this.mondata.atking.trace_tm_left = 0;
-                this.gmap.update_pl_atk_tracing(this, now);
+                grid_map.update_pl_atk_tracing(this, now);
 
                 if (now > this.next_mov_tm)
                 {
                     if (this.mondata.keepdist)
-                        this.gmap.update_keep_atk_range(this, now);
+                        grid_map.update_keep_atk_range(this, now);
 
                     if (this.monconf.ai.cond != null)
                     {
@@ -1864,8 +1554,8 @@ namespace SceneTest
                         }
                     }
 
-                    int init_x = this.mondata.init_x * StaticStuff.GRID_WIDTH + 16;
-                    int init_y = this.mondata.init_y * StaticStuff.GRID_WIDTH + 16;
+                    double init_x = this.mondata.init_x * StaticStuff.GRID_WIDTH + 16;
+                    double init_y = this.mondata.init_y * StaticStuff.GRID_WIDTH + 16;
                     bool need_fall_back = true;
 
                     if (this.mondata.patrol != null && this.mondata.patrol.movto != null)
@@ -1879,7 +1569,8 @@ namespace SceneTest
                     {
                         if (this.gmap.map_sprites.ContainsKey(this.mondata.follow.tar_iid))
                         {
-                            IBaseUnit follow_pl = this.gmap.map_sprites[this.mondata.follow.tar_iid];
+                            IMapUnit follow_pl = this.gmap.map_sprites[this.mondata.follow.tar_iid].get_pack_data();
+
                             init_x = follow_pl.x;
                             init_y = follow_pl.y;
                         }
@@ -1898,7 +1589,7 @@ namespace SceneTest
                             Point2D cur_g = new Point2D(this.mondata.x / StaticStuff.GRID_WIDTH,
                                 this.mondata.y / StaticStuff.GRID_WIDTH);
                             List<Point2D> path =
-                                Utility.findPath(this.gmap.mapid, cur_g.x, cur_g.y, this.mondata.init_x,
+                                Utility.findPath(this.gmap.mapid, (int)cur_g.x, (int)cur_g.y, this.mondata.init_x,
                                     this.mondata.init_y);
 
                             if (path != null && path.Count > 0)
@@ -1924,13 +1615,13 @@ namespace SceneTest
             else if (this.mondata.follow != null)
             {
                 this.mondata.follow.trace_tm_left = 0;
-                this.gmap.update_pl_follow_tracing(this, now);
+                grid_map.update_pl_follow_tracing(this, now);
 
                 if (this.mondata.moving == null && this.mondata.follow != null && this.mondata.follow.do_ai)
                 {
-                    IBaseUnit f_pl = this.gmap.map_sprites[this.mondata.follow.tar_iid];
-                    this.mondata.init_x = f_pl.x / StaticStuff.GRID_WIDTH;
-                    this.mondata.init_y = f_pl.y / StaticStuff.GRID_WIDTH;
+                    IMapUnit f_pl = this.gmap.map_sprites[this.mondata.follow.tar_iid].get_pack_data();
+                    this.mondata.init_x = (int)(f_pl.x / StaticStuff.GRID_WIDTH);
+                    this.mondata.init_y = (int)(f_pl.y / StaticStuff.GRID_WIDTH);
 
                     this.update_ai_mover(now);
                 }
@@ -1945,32 +1636,322 @@ namespace SceneTest
 
             if (this.shkilawd)
             {
-                if (now - this.lastdmgtm > 10)
+                if (now - this.lastdmgtm > 10 * 1000)
                 {
+                    // 3秒内未被攻击，清理伤害列表
+                    foreach (KeyValuePair<int, int> pair in this.dmglist)
+                    {
+                        IBaseUnit target = this.gmap.get_player_by_cid(pair.Key);
+                        if (null == target)
+                            continue;
 
+                        if (!this.is_ply_inzone(target.get_pack_data().sid))
+                            continue;
+
+                        // send self_attchange msg
+                        //::send_rpc(target.pinfo.sid, 32, { mondmg = 0, total_mondmg = 0, mid = this.mondata.mid});
+                    }
+
+                    this.dmglist.Clear();
                 }
+
+                // 共享击杀奖励类怪物，发送伤害值至附近玩家
+                //if (this.notify_hate_tm < cur_tm_s)
+                //{
+                //    local total_dmg = 0;
+                //    foreach (cid, dmg in this.dmglist)
+                //{
+                //        total_dmg += dmg;
+                //    }
+
+                //    foreach (cid, dmg in this.dmglist)
+                //{
+                //        if (!(cid in this.gmap.map_players_bycid))
+                //    {
+                //            continue;
+                //        }
+
+                //        local target = this.gmap.map_players_bycid[cid];
+
+                //        if (!this.is_ply_inzone(target.pinfo.sid))
+                //        {
+                //            continue;
+                //        }
+
+                //    // send self_attchange msg
+                //    ::send_rpc(target.pinfo.sid, 32, { mondmg = dmg, total_mondmg = total_dmg, mid = this.mondata.mid});
+                //    }
+
+                //    this.notify_hate_tm = cur_tm_s + 2; // 2秒同步一次
+                //}
             }
+
+            if (this.check_pos_tm < now)
+            {
+                // 检查位置合法性
+                var grid_pos = this.gmap.get_grid_by_pt(this.mondata.x, this.mondata.y);
+                if (grid_pos == null || (this.mondata.x < 0) || (this.mondata.y < 0))
+                {
+                    int to_x = this.mondata.init_x * game_const.map_grid_pixel + 16;
+                    int to_y = this.mondata.init_y * game_const.map_grid_pixel + 16;
+
+                    Utility.trace_err("monster mid[" + this.mondata.mid + "] pos x[" + this.mondata.x + "] y[" + this.mondata.y + "] illegal correct to x[" + to_x + "] y[" + to_y + "]\n");
+
+                    this.mondata.x = to_x;
+                    this.mondata.y = to_y;
+
+                    //this.broad_cast_zone_msg_and_self(8, { iid = this.mondata.iid, x = this.mondata.x, y = this.mondata.y});
+                }
+
+                this.check_pos_tm = now + 15; // 15秒检查一次
+            }
+
+            if (this.running_tm > 0)
+            {
+                //sys.trace(sys.SLT_DETAIL, "this.running_tm ["+this.running_tm+"] \n");
+                this.running_tm -= time_elapsed;
+                if (this.running_tm < 0) this.running_tm = 0;
+            }
+
+            //if (this.mondata.arrive)
+            //{
+            //    // 判断是否触发到达地点动作
+
+            //    foreach (cond in this.mondata.arrive)
+            //    {
+            //        local arrive = cond.arrive[0];
+
+            //        // 检查目标点到达条件
+            //        local pos = { x = (this.mondata.x / game_const.map_grid_pixel).tointeger(), y = (this.mondata.y / game_const.map_grid_pixel).tointeger() };
+            //        local distx = pos.x - arrive.x;
+            //        local disty = pos.y - arrive.y;
+
+            //        local dist2 = distx * distx + disty * disty;
+            //        local cond2 = arrive.rad * arrive.rad;
+            //        if (dist2 > cond2)
+            //        {
+            //            // 未到达指定地点
+            //            continue;
+            //        }
+
+            //        // 到达指定地点
+            //        if (_check_act_cond(cond, false))
+            //        {
+            //            _do_ai_act(cond.act, cur_clock_tm);
+            //        }
+            //    }
+            //}
         }
 
         public void _trig_respawn_act(long now)
         {
+            // 复活ai,条件判断，ai动作
+            if (this.monconf.ai.cond != null)
+            {
+                foreach (var cond in this.monconf.ai.cond)
+                {
+                    if (cond.respawn != 1)
+                        continue;
 
-        }
+                    if (cond.minlvl > 0 && this.mondata.level < cond.minlvl)
+                        continue;
 
-        public List<IBaseUnit> get_inz_plys()
-        {
-
+                    _do_ai_act(cond.act, now);
+                }
+            }
         }
 
         public void cancel_atk()
         {
-
+            this.mondata.atking = null;
         }
 
         public void _try_patrol(long now)
         {
+            if (this.mondata.patrol == null)
+                return;
+
+            //sys.dumpobj(this.mondata.patrol);
+
+            if (this.mondata.patrol.cnt <= 0)
+                return;
+
+            var patrol = this.mondata.patrol;
+
+            if (null == patrol.movto)
+            {
+                // 取巡逻节点
+                if (patrol.idx >= patrol.path.Count)
+                {
+                    patrol.idx = 0;
+                    --this.mondata.patrol.cnt;
+                    return;
+                }
+
+                //sys.trace(sys.SLT_DETAIL, "patrol to ["+patrol.idx+"]\n");
+
+                var cur_node = patrol.path[patrol.idx];
+
+                // 在路径下一节点范围内随机选择一个点做目标
+                patrol.movto = new moveto()
+                {
+                    x = (cur_node.x + Utility.random(0, cur_node.width)),
+                    y = (cur_node.y + Utility.random(0, cur_node.height)),
+                    rngx = (cur_node.width * game_const.map_grid_pixel),
+                    rngy = (cur_node.height * game_const.map_grid_pixel),
+                    trinitx = this.mondata.x,
+                    trinity = this.mondata.y,
+                    tracing = false
+                };
+
+                if (cur_node.wait > 0)
+                {
+                    patrol.movto.wait = cur_node.wait;
+                    patrol.movto.cont_tm = 0;
+                }
+
+                _move_to_patrol_node();
+            }
+            else
+            {
+                // 当前有移动目标节点，比较是否到达移动目标
+                double movto_x = patrol.movto.x * game_const.map_grid_pixel + 16;
+                double movto_y = patrol.movto.y * game_const.map_grid_pixel + 16;
+
+                double rang_x = Math.Abs(this.mondata.x - movto_x);
+                double rang_y = Math.Abs(this.mondata.y - movto_y);
+                if (rang_x <= patrol.movto.rngx && rang_y <= patrol.movto.rngy)
+                {
+                    //sys.trace(sys.SLT_DETAIL, "patrol to ["+patrol.idx+"] reaching\n");
+
+                    // 已移动到指定范围内
+
+                    // 将怪物的初始地点设置为当前巡逻节点
+                    this.mondata.init_x = patrol.movto.x;
+                    this.mondata.init_y = patrol.movto.y;
+
+                    if (patrol.movto.wait > 0)
+                    {
+                        // 需要在当前点上作停留
+                        if (patrol.movto.cont_tm == 0)
+                        {
+                            patrol.movto.cont_tm = now + patrol.movto.wait;
+                        }
+
+                        if (patrol.movto.cont_tm > now)
+                        {
+                            // 尚未到达继续推进巡逻时间
+                            return;
+                        }
+                    }
+
+                    patrol.movto = null;
+
+                    // 取下一个节点
+                    ++patrol.idx;
+                    if (patrol.idx >= patrol.path.Count)
+                    {
+                        patrol.idx = 0;
+                        --this.mondata.patrol.cnt;
+                    }
+                }
+                else
+                {
+                    // 未移动到目标节点
+                    if (this.mondata.moving == null)
+                    {
+                        // 当前不在移动中，尝试移动至目标节点
+
+                        //sys.trace(sys.SLT_DETAIL, "patrol to ["+patrol.idx+"] not moving\n");
+
+                        _move_to_patrol_node();
+                    }
+                }
+            }
+        }
+
+        public void _move_to_patrol_node()
+        {
+            var patrol = this.mondata.patrol;
+
+            // 寻路
+            Point2D cur_grid = new Point2D((this.mondata.x / game_const.map_grid_pixel), (this.mondata.y / game_const.map_grid_pixel));
+            var path = gmap.find_path(cur_grid.x, cur_grid.y, patrol.movto.x, patrol.movto.y);
+
+            //sys.trace(sys.SLT_DETAIL, "find path["+path+"]\n");
+
+            if (path != null && path.Count > 0)
+            {
+                // 移动
+                this.mondata.moving = new moving()
+                {
+                    start_tm = Utility.time(),
+                    pts = path,
+                    to_x = patrol.movto.x,
+                    to_y = patrol.movto.y,
+                    float_x = (this.mondata.x),
+                    float_y = (this.mondata.y)
+                };
+
+                //local data = { start_tm = this.mondata.moving.start_tm, iid = this.mondata.iid, frm_x = this.mondata.x, frm_y = this.mondata.y, to_x = patrol.movto.x, to_y = patrol.movto.y };
+                // send move msg to clients
+                //gmap.broadcast_map_rpc(9, data);
+
+                //sys.trace(sys.SLT_DETAIL, "patrol move: ply_cnt["+this.get_inz_ply_cnt()+"]\n");
+                //sys.dumpobj(data);
+
+                //this.broad_cast_zone_msg(9, data);
+            }
+            else
+            {
+                // 寻路失败,跳过这个节点
+                //sys.trace(sys.SLT_ERR, "map["+gmap.mapid+"] monster mid["+this.mondata.mid+"] patrol node idx["+patrol.idx+"] find path err, path:\n");
+                //sys.dumpobj(path);
+
+                patrol.movto = null;
+                ++patrol.idx;
+                if (patrol.idx >= patrol.path.Count)
+                {
+                    patrol.idx = 0;
+                    --this.mondata.patrol.cnt;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sid"></param>
+        /// <returns></returns>
+        public bool is_ply_inzone(int sid)
+        {
+            grid_map g = this.gmap;
+            if (null == g)
+                return false;
+
+            IBaseUnit s_player = g.get_player_by_sid(sid);
+            if (null == s_player)
+                return false;
+
+            IMapUnit s_pl = s_player.get_pack_data();
+
+            if (Math.Abs(s_pl.grid_x - this.mondata.grid_x) > 10)
+                return false;
+
+            if (Math.Abs(s_pl.grid_y - this.mondata.grid_y) > 10)
+                return false;
+
+            return true;
+        }
+
+        public void on_be_hurt(IBaseUnit frm_sprite)
+        {
 
         }
 
+        public void on_hurt(IBaseUnit tar_sprite)
+        {
+
+        }
     }
 }

@@ -1266,7 +1266,7 @@ namespace SceneTest
                 var val = pl.states.state_par[i];
                 var rmved = false;
 
-                IBaseUnit frm_sprite = sprite.gmap.getSprite(val.frm_iid);
+                IBaseUnit frm_sprite = sprite.gmap.get_sprite_by_iid(val.frm_iid);
 
 
                 if (val.end_tm <= cur_clock_tm)

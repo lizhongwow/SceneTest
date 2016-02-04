@@ -29,6 +29,11 @@ namespace SceneTest
 
         }
 
+        public static monsterconf get_monster_conf(int mid)
+        {
+
+        }
+
         public static game_err_code check_target_type(IBaseUnit caster, IBaseUnit tar_sprite, int aff, map_pk_setting_type map_pk_seting)
         {
             IMapUnit pl = caster.get_pack_data();

@@ -65,6 +65,13 @@ namespace SceneTestLib.Confs
         public int id { get; set; }
 
         public born_pos born {get;set;}
+
+        public List<map_mon_conf> map_mon { get; set; }
+
+        public level_map_conf()
+        {
+            map_mon = new List<map_mon_conf>();
+        }
     }
 
 
@@ -125,6 +132,9 @@ namespace SceneTestLib.Confs
     {
         public int mid { get; set; }
         public int cnt { get; set; }
+        public int kmcnt { get; set; }
+        public int sideid { get; set; }
+        public int showid { get; set; }
     }
 
     public class pvp_conf
@@ -167,5 +177,55 @@ namespace SceneTestLib.Confs
     {
         public int preptm { get; set; }
         public int wincnt { get; set; }
+    }
+
+    public class trigger_conf
+    {
+        public int id { get; set; }
+
+        public int initcr { get; set; }
+
+        public string addtriger { get; set; }
+        public string rmvtriger { get; set; }
+
+        public int dalyrep { get; set; }
+
+        public int rate { get; set; }
+
+        public int bcast { get; set; }
+
+        public callmon_conf callmon { get; set; }
+        public addmon_conf addmon { get; set; }
+
+        public km_conf km { get; set; }
+    }
+
+    public class callmon_conf
+    {
+        public mcnt_conf mcnt { get; set; }
+
+        public List<map_mon_conf> map_mon { get; set; }
+
+        public callmon_conf()
+        {
+            this.map_mon = new List<map_mon_conf>();
+        }
+    }
+
+    public class addmon_conf
+    {
+        public List<map_mon_conf> map_mon { get; set; }
+
+        public addmon_conf()
+        {
+            this.map_mon = new List<map_mon_conf>();
+        }
+    }
+
+    public class mcnt_conf
+    {
+        public int mid { get; set; }
+
+        public int cnt { get; set; }
     }
 }

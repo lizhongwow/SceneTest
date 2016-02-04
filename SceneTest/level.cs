@@ -94,7 +94,7 @@ namespace SceneTest
         public group_map()
         {
             maps = new Dictionary<int, grid_map>();
-            this.kmfin = new Dictionary<int, int>();
+            this.kmfin = new Dictionary<int, SceneTest.kmfin>();
             this.tmfin = false;
             this.fin = false;
             this.closed = false;
@@ -107,7 +107,7 @@ namespace SceneTest
         public group_map(int _gpid)
         {
             maps = new Dictionary<int, grid_map>();
-            this.kmfin = new Dictionary<int, int>();
+            this.kmfin = new Dictionary<int, SceneTest.kmfin>();
             this.tmfin = false;
             this.fin = false;
             this.closed = false;
@@ -263,30 +263,30 @@ namespace SceneTest
 
             //this.dota = new Dictionary<int, IBaseUnit>();
 
-            this.kmfin = { };
-            this.kmfinbyside = { };
-            this.ptfinbyside = { };
+            this.kmfin = new Dictionary<int, SceneTest.kmfin>();
+            //this.kmfinbyside = { };
+            this.ptfinbyside = new Dictionary<int, SceneTest.ptfinbyside>();
             this.maxptside = -1;
-            this.prize = { };
-            this.score_km = { };
+            //this.prize = { };
+            this.score_km = new score_km();
             this.is_score_km = false;
 
             this.tmfin = false;
 
-            this.tm_cost = false;
-            this.total_tm_cost = null;
+            //this.tm_cost = false;
+            //this.total_tm_cost = null;
             this.tm_out = 0;
-            this.map_need_km = { };
-            this.enter_map_plys = { };
-            this.kprec = { };
-            this.kpboard = [];
+            //this.map_need_km = { };
+            this.enter_map_plys = new Dictionary<int, Dictionary<int, IBaseUnit>>();
+            //this.kprec = { };
+            //this.kpboard = [];
 
-            this.rounds_conf = { };
-            this.round_plys = { };
+            this.rounds_conf = new Dictionary<int, round_conf>();
+            this.round_plys = new Dictionary<int, round_player>();
 
-            this.kick_out_plys = { };
+            //this.kick_out_plys = { };
 
-            this.stastic_lvl_cost = null;
+            //this.stastic_lvl_cost = null;
         }
 
         public void _on_player_leave(IBaseUnit ply, bool flush_data)
@@ -344,7 +344,7 @@ namespace SceneTest
         {
             foreach (var mapconf in lvl_conf.level_map)
             {
-                var map = grid_map.create_map(mapconf.id, "sg_map");
+                var map = new grid_map(mapconf.id);
                 //sys.trace(sys.SLT_SYS, "sg_level instance id ["+llid+"] create map[" + lvl_conf.mapid +"]\n");
 
                 if (map == null)
@@ -355,7 +355,7 @@ namespace SceneTest
 
                 map.worldsvr = this;
                 map.blvlmap = true;
-                map.init(mapconf.id);
+                //map.init(mapconf.id);
 
                 gp_map.maps[mapconf.id] = map;
 
@@ -400,7 +400,7 @@ namespace SceneTest
                             continue;
 
                         var map = gp_map.maps[mapconf.id];
-                        map.add_init(mapconf, Utility.time() - this.start_tm);
+                        map.add_init(mapconf.map_mon, Utility.time() - this.start_tm);
                     }
                 }
 
@@ -424,7 +424,7 @@ namespace SceneTest
                     {
                         foreach (var km in diff_lvl_conf.fin_check.km)
                         {
-                            gp_map.kmfin[km.mid] = km.cnt;
+                            gp_map.kmfin[km.mid] = new kmfin() { cntleft = km.cnt };
                         }
                     }
                     if (diff_lvl_conf.fin_check.tm > 0)
@@ -440,7 +440,7 @@ namespace SceneTest
                 {
                     foreach (var km in lvl_conf.fin_check.km)
                     {
-                        gp_map.kmfin[km.mid] = km.cnt;
+                        gp_map.kmfin[km.mid] = new kmfin() { cntleft = km.cnt };
                     }
                 }
                 if (lvl_conf.fin_check.tm > 0)
@@ -1230,7 +1230,7 @@ namespace SceneTest
 
             foreach (var mapconf in lvl_conf.level_map)
             {
-                grid_map map = grid_map.create_map(mapconf.id, "sg_map");
+                grid_map map = new grid_map(mapconf.id);
                 //sys.trace(sys.SLT_SYS, "sg_level instance id ["+llid+"] create map[" + lvl_conf.mapid +"]\n");
                 if (map == null)
                 {
@@ -1242,7 +1242,7 @@ namespace SceneTest
 
                 map.worldsvr = this;
                 map.blvlmap = true;
-                map.init(mapconf.id);
+                //map.init(mapconf.id);
 
                 this.maps[mapconf.id] = map;
 
@@ -1298,7 +1298,7 @@ namespace SceneTest
                         if (this.maps.ContainsKey(map.id))
                             continue;
 
-                        this.maps[map.id].add_init(map, Utility.time() - this.start_tm);
+                        this.maps[map.id].add_init(map.map_mon, Utility.time() - this.start_tm);
                     }
                 }
 
@@ -1322,7 +1322,7 @@ namespace SceneTest
                     {
                         foreach (var km in diff_lvl_conf.fin_check.km)
                         {
-                            this.kmfin[km.mid] = km.cnt;
+                            this.kmfin[km.mid] = new kmfin() { cntleft = km.cnt };
                         }
                     }
 
@@ -1346,7 +1346,7 @@ namespace SceneTest
                 {
                     foreach (var km in lvl_conf.fin_check.km)
                     {
-                        this.kmfin[km.mid] = km.cnt;
+                        this.kmfin[km.mid] = new kmfin() { cntleft = km.cnt };
                     }
                 }
                 if (lvl_conf.fin_check.tm > 0)
@@ -1559,28 +1559,26 @@ namespace SceneTest
             //this.sgplayerside_bycid = {};
             //this.sides_conf = null;
 
-            this.clansideid_ary = [];
-            this.kmfin = new Dictionary<int, int>();
-            this.kmfinbyside = {
-            };
-            this.ptfinbyside = {
-            };
+            //this.clansideid_ary = [];
+            this.kmfin = new Dictionary<int, SceneTest.kmfin>();
+            //this.kmfinbyside = {            };
+            this.ptfinbyside = new Dictionary<int, SceneTest.ptfinbyside>();
             this.maxptside = -1;
-            this.death_pts = null;
+            this.death_pts = new Dictionary<int, Death_Pt>();
             this.death_ptconf = null;
-            this.kumiteply = null;
-            this.kumite_conf = null;
-            this.kumitefight_ply = null;
-            this.kumite_waittm = 0;
-            this.cltwar = null;
-            this.clcqwar = null;
+            //this.kumiteply = null;
+            //this.kumite_conf = null;
+            //this.kumitefight_ply = null;
+            //this.kumite_waittm = 0;
+            //this.cltwar = null;
+            //this.clcqwar = null;
 
-            this.kprec = {
-            };
-            this.kpboard = [];
+            //this.kprec = {
+            //};
+            //this.kpboard = [];
 
-            this.camp_side = {
-            };
+            //this.camp_side = {
+            //};
 
             var linfo = Level.get_lvl_info(llid);
             if (linfo == null)
@@ -1907,7 +1905,7 @@ namespace SceneTest
             if (this.preptm > 0)
             {
                 // 有准备时间，准备时间内不准pk
-                foreach (var map in this.maps)
+                foreach (var map in this.maps.Values)
                 {
                     map.set_pk_seting(map_pk_setting_type.MPST_PEACE);
                 }
@@ -1950,7 +1948,7 @@ namespace SceneTest
                 if (time_s >= this.pkrest_tm)
                 {
                     // 准备时间过后，恢复pk设置
-                    foreach (var map in this.maps)
+                    foreach (var map in this.maps.Values)
                     {
                         map.reset_pk_seting();
                     }
@@ -3514,6 +3512,11 @@ namespace SceneTest
                 // send self_attchange msg
                 //::send_rpc(ply.pinfo.sid, 32, { respawn_tms = ply.allow_respawn_tm_s});
             }
+        }
+
+        public void _on_triger_addmons(List<IBaseUnit> added_mon)
+        {
+
         }
 
     }

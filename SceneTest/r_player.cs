@@ -230,7 +230,7 @@ namespace SceneTest
                 //this.pinfo.pk_tar_iid = 0;  
                 if (pinfo.atking != null)
                 {//停止 自动攻击是玩家
-                    IBaseUnit target = this.gmap.getSprite(this.pinfo.atking.tar_iid);
+                    IBaseUnit target = this.gmap.get_sprite_by_iid(this.pinfo.atking.tar_iid);
                     if (target != null)
                     {
                         if (target.get_sprite_type() == map_sprite_type.MstPlayer)

@@ -71,7 +71,7 @@ namespace SceneTest
             list.Add(element);
 
             return list;
-        }        
+        }
 
         public static List<T> slice<T>(this List<T> list, int start_index)
         {
@@ -275,7 +275,7 @@ namespace SceneTest
 
         long allow_respawn_tm_s { get; set; }
 
-        void update(IService service, long cur_time,long time_elapsed);
+        void update(IService service, long cur_time, long time_elapsed);
     }
 
     public class IBaseUnit : ISprite
@@ -343,9 +343,51 @@ namespace SceneTest
 
         public List<IBaseUnit> petmon_insts { get; set; }
 
-        public void flush_db_data(bool a ,bool b)
+        public void flush_db_data(bool a, bool b)
         {
 
+        }
+
+        public List<IBaseUnit> get_inz_plys(IBaseUnit unit)
+        {
+            IMapUnit unit_pl = unit.get_pack_data();
+            List<IBaseUnit> inz_plys = new List<IBaseUnit>();
+            List<IBaseUnit> all_players = this.gmap.map_players_bycid.Values.ToList();
+            foreach (var p in all_players)
+            {
+                IMapUnit pl = p.get_pack_data();
+
+                if (pl.isdie || pl.ghost)
+                    continue;
+
+                if (Math.Abs(pl.grid_x - unit_pl.grid_x) > 10 || Math.Abs(pl.grid_y - unit_pl.grid_y) > 10)
+                    continue;
+
+                inz_plys.Add(p);
+            }
+
+            return inz_plys;
+        }
+
+        public List<IBaseUnit> get_inz_mons(IBaseUnit unit)
+        {
+            IMapUnit unit_pl = unit.get_pack_data();
+            List<IBaseUnit> inz_plys = new List<IBaseUnit>();
+            List<IBaseUnit> all_players = this.gmap.map_mons.Values.ToList();
+            foreach (var p in all_players)
+            {
+                IMapUnit pl = p.get_pack_data();
+
+                if (pl.isdie || pl.ghost)
+                    continue;
+
+                if (Math.Abs(pl.grid_x - unit_pl.grid_x) > 10 || Math.Abs(pl.grid_y - unit_pl.grid_y) > 10)
+                    continue;
+
+                inz_plys.Add(p);
+            }
+
+            return inz_plys;
         }
 
         public Dictionary<int, long> defend_tm_map
@@ -600,9 +642,19 @@ namespace SceneTest
             throw new NotImplementedException();
         }
 
-        public void on_pos_change(double x, double y)
+        public virtual void on_pos_change(double x, double y)
         {
-            throw new NotImplementedException();
+            
+        }
+
+        public virtual void set_lvlside(int sideid)
+        {
+
+        }
+
+        public virtual void set_conf_respawn_tm(long respawn_tm)
+        {
+
         }
 
         public void re_calc_cha_data()
@@ -683,13 +735,14 @@ namespace SceneTest
 
     public interface IMapUnit : IPoint2D
     {
-        IMapUnit DefaultMapUnit { get; set; }
+        int grid_x { get; set; }
+        int grid_y { get; set; }
 
         int pk_v { get; set; }
 
         int map_id { get; set; }
-        double x { get; set; }
-        double y { get; set; }
+        //double x { get; set; }
+        //double y { get; set; }
 
         int org_init_x { get; set; }
         int org_init_y { get; set; }
@@ -1273,6 +1326,32 @@ namespace SceneTest
         }
 
         public bool ghost
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int grid_x
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public int grid_y
         {
             get
             {
@@ -2065,7 +2144,7 @@ namespace SceneTest
             }
         }
 
-        public int x
+        public double x
         {
             get
             {
@@ -2078,7 +2157,7 @@ namespace SceneTest
             }
         }
 
-        public int y
+        public double y
         {
             get
             {
@@ -2105,58 +2184,6 @@ namespace SceneTest
         }
 
         double IMapUnit.ly
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IPoint2D.x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IPoint2D.y
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.y
         {
             get
             {
@@ -2210,6 +2237,7 @@ namespace SceneTest
     {
         public int die { get; set; }
         public int minlvl { get; set; }
+        public int respawn { get; set; }
 
         public List<monstarconf_cond_act> act = new List<monstarconf_cond_act>();
     }
@@ -2226,6 +2254,8 @@ namespace SceneTest
         public int y { get; set; }
 
         public int suicide { get; set; }
+
+        public int seltar { get; set; }
     }
 
     public class monsterconf
@@ -2361,16 +2391,62 @@ namespace SceneTest
         public moveto movto { get; set; }
         public Tracing tracing = null;
 
+        public List<moveto> path { get; set; }
+
         public int idx { get; set; }
         public int cnt { get; set; }
         public int init_cnt { get; set; }
     }
 
+    /// <summary>
+    /// 移动，x y width height 共同确定了移动的终点，即终点是一个矩形区域
+    /// 
+    /// </summary>
     public class moveto
     {
-        public int trinitx { get; set; }
-        public int trinity { get; set; }
+        /// <summary>
+        /// 移动的初始点，像素值
+        /// </summary>
+        public double trinitx { get; set; }
+        /// <summary>
+        /// 移动的初始点，像素值
+        /// </summary>
+        public double trinity { get; set; }
+
         public bool tracing { get; set; }
+
+        /// <summary>
+        /// 表示grid_x
+        /// </summary>
+        public int x { get; set; }
+
+        /// <summary>
+        /// 表示grid_y
+        /// </summary>
+        public int y { get; set; }
+
+        public int width { get; set; }
+        public int height { get; set; }
+
+        /// <summary>
+        /// 区域的宽度，像素值
+        /// </summary>
+        public int rngx { get; set; }
+
+        /// <summary>
+        /// 区域的高度，像素值
+        /// </summary>
+        public int rngy { get; set; }
+
+        /// <summary>
+        /// 在此点上的等待时间
+        /// </summary>
+        public long wait { get; set; }
+
+        /// <summary>
+        /// 在此点上停留的时间终点
+        /// </summary>
+        public long cont_tm { get; set; }
     }
 
     public class follow
@@ -2475,6 +2551,8 @@ namespace SceneTest
         /// 格子相素
         /// </summary>
         public const int map_grid_pixel = 32; //
+
+        public const int vision_distance_grid = 10;
     };
 
     //连接状态
