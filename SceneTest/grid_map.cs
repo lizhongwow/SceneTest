@@ -55,11 +55,13 @@ public class grid_map
     public bool immrespawn = false; // 是否不允许原地复活
     public bool ignore_side = false;  // 忽略阵营情况，同阵营之间可以pk
 
-    public Dictionary<int, player_skill_data> map_skills = null;
+    public Dictionary<int, SkillData> map_skills = null;
 
     public Dictionary<int, List<IBaseUnit>> petmon_cache = null; // 缓存的战斗宠物实例，以mid为key
 
     public Dictionary<int, map_item> map_dpitms = new Dictionary<int, map_item>();
+
+    public Dictionary<int, link_conf> add_links = new Dictionary<int, link_conf>();
 
     public int map_dpidseed = 1;
 
@@ -134,7 +136,7 @@ public class grid_map
         this.map_dpitms = new Dictionary<int, map_item>();
 
         this.last_check_tm = 0;
-        this.map_skills = new Dictionary<int, player_skill_data>();
+        this.map_skills = new Dictionary<int, SkillData>();
 
         var monster_count = this.get_monster_desc_count();
         this.petmon_cache = new Dictionary<int, List<IBaseUnit>>();
@@ -190,9 +192,9 @@ public class grid_map
         }
     }
 
-    public player_skill_data get_map_skill(int skid)
+    public SkillData get_map_skill(int skid)
     {
-        player_skill_data conf = null;
+        SkillData conf = null;
         this.map_skills.TryGetValue(skid, out conf);
 
         return conf;
@@ -3713,7 +3715,7 @@ public class grid_map
 
     public born_pos get_born_area()
     {
-        throw new NotImplementedException();
+        return new born_pos();
     }
 
     public bool is_player_in_map(int sid)
@@ -4129,6 +4131,17 @@ public class grid_map
         return added_mon;
     }
 
+
+    public link_conf get_link_by_gto(int gto)
+    {
+        foreach(var l in this.map_conf.link)
+        {
+            if (l.gto == gto)
+                return l;
+        }
+
+        return null;
+    }
 
 
 

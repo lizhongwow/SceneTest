@@ -13,5 +13,7 @@ namespace SceneTest
         Dictionary<int,IBaseUnit> sgplayers { get; set; }
 
         void ply_change_map(IBaseUnit sprite, grid_map map);
+
+        Dictionary<int,grid_map> maps { get; set; }
     }
 }

@@ -22,6 +22,7 @@ namespace SceneTestLib.Confs
 
         public List<map_mon_conf> map_mon { get; set; }
         public List<pk_zone_conf> pk_zone { get; set; }
+        public List<link_conf> link { get; set; }
 
         public map_grd_conf map_grd { get; set; }
 
@@ -29,6 +30,7 @@ namespace SceneTestLib.Confs
         {
             this.map_mon = new List<map_mon_conf>();
             this.pk_zone = new List<pk_zone_conf>();
+            this.link = new List<link_conf>();
         }
     }
 
@@ -119,5 +121,34 @@ namespace SceneTestLib.Confs
         public int defrang { get; set; }
         public int tracerang { get; set; }
         public int running_tm { get; set; }
+    }
+
+    public class link_conf
+    {
+        public int id { get; set; }
+
+        public int gto { get; set; }
+
+        /// <summary>
+        /// grid_x
+        /// </summary>
+        public int x { get; set; }
+
+        /// <summary>
+        /// grid_y
+        /// </summary>
+        public int y { get; set; }
+
+
+        /// <summary>
+        /// grid_to_x
+        /// </summary>
+        public int to_x { get; set; }
+
+
+        /// <summary>
+        /// grid_to_y
+        /// </summary>
+        public double to_y { get; set; }
     }
 }

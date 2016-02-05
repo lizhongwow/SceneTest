@@ -213,7 +213,7 @@ namespace SceneTest
         void on_make_direct_dmg();
         void calc_eqp_dura(double dmg);
 
-        void die(IBaseUnit frm_sprite);
+        void die(IBaseUnit frm_sprite, bool clear_owner = false);
 
         bool is_in_lvl { get; set; }
 
@@ -348,9 +348,9 @@ namespace SceneTest
 
         }
 
-        public List<IBaseUnit> get_inz_plys(IBaseUnit unit)
+        public List<IBaseUnit> get_inz_plys()
         {
-            IMapUnit unit_pl = unit.get_pack_data();
+            IMapUnit unit_pl = this.get_pack_data();
             List<IBaseUnit> inz_plys = new List<IBaseUnit>();
             List<IBaseUnit> all_players = this.gmap.map_players_bycid.Values.ToList();
             foreach (var p in all_players)
@@ -369,9 +369,19 @@ namespace SceneTest
             return inz_plys;
         }
 
-        public List<IBaseUnit> get_inz_mons(IBaseUnit unit)
+        public List<IBaseUnit> get_observer_plys()
         {
-            IMapUnit unit_pl = unit.get_pack_data();
+            throw new NotImplementedException();
+        }
+
+        public List<IBaseUnit> get_non_observer_plys()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<IBaseUnit> get_inz_mons()
+        {
+            IMapUnit unit_pl = this.get_pack_data();
             List<IBaseUnit> inz_plys = new List<IBaseUnit>();
             List<IBaseUnit> all_players = this.gmap.map_mons.Values.ToList();
             foreach (var p in all_players)
@@ -390,109 +400,21 @@ namespace SceneTest
             return inz_plys;
         }
 
-        public Dictionary<int, long> defend_tm_map
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        public Dictionary<int, long> defend_tm_map { get; set; }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public Dictionary<int, long> beatk_ply_cids { get; set; }
 
-        public Dictionary<int, long> beatk_ply_cids
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        public Level in_lvl { get; set; }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public bool kp_asist_rec { get; set; }
 
-        public Level in_lvl
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        public bool ignore_team { get; set; }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public bool ignore_clan { get; set; }
 
-        public bool kp_asist_rec
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        public long db_last_update_tm { get; set; }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool ignore_team
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool ignore_clan
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long db_last_update_tm
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long allow_respawn_tm_s
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public long allow_respawn_tm_s { get; set; }
 
         public virtual bool isdie()
         {
@@ -637,14 +559,14 @@ namespace SceneTest
         }
 
 
-        public void die(IBaseUnit frm_sprite)
+        public void die(IBaseUnit frm_sprite, bool clear_owner = false)
         {
             throw new NotImplementedException();
         }
 
         public virtual void on_pos_change(double x, double y)
         {
-            
+
         }
 
         public virtual void set_lvlside(int sideid)
@@ -707,16 +629,6 @@ namespace SceneTest
             throw new NotImplementedException();
         }
 
-        public List<IBaseUnit> get_inz_plys()
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<IBaseUnit> get_inz_mons()
-        {
-            throw new NotImplementedException();
-        }
-
         public void rmv_zone_player(int sid)
         {
             throw new NotImplementedException();
@@ -735,6 +647,8 @@ namespace SceneTest
 
     public interface IMapUnit : IPoint2D
     {
+        Dictionary<int,player_skill_data> skills { get; set; }
+        rednm_type rednm { get; set; }
         int grid_x { get; set; }
         int grid_y { get; set; }
 
@@ -896,1305 +810,205 @@ namespace SceneTest
 
     public class pinfo : IMapUnit
     {
-        public Dictionary<int, int> addResist
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atkcdtm
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public atking atking
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atkrange
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public atk_type atktp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atk_dmg_mul
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atk_max
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atk_min
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int atk_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public List<BState> bstates
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public casting casting
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool cfmv
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int cid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int clanid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int criatk
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int criatk_debuffs
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int cridmg
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int cur_kp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int def
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public IMapUnit DefaultMapUnit
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Dictionary<int, long> defend_tm_map
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int def_red
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int dmg_red
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int dobrate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int dp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int exatk
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int exatk_debuffs
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int exdmg
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int exp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int exper_add
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public follow follow
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int full_hp_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int full_mp_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool ghost
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int grid_x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int grid_y
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public holding holding
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int hp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int hpsuck
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int hpsuck_dmgmul
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int igatk_dmg_mul
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int igdef_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int igdef_rate_debuffs
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int igdmg_red
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int iid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int invisible
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool in_pczone
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool isdie
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public jumping jumping
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int kp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long last_atk_tm
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public List<Point2D> last_mvpts
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int level
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int line
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int llid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int lmpid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int lvlsideid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int lx
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int ly
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int map_id
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int matk_max
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int matk_min
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int max_dp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int max_hp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int max_mp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int mid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int miss_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public moving moving
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int mp
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int observer
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int org_init_x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int org_init_y
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int owner_cid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkatk
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkatkrate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkatk_dmg_mul
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkdef
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkdmg_red
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkigdp_rate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkigdp_rate_debuffs
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkmatk
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pkmisrate
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public pk_state_type pk_state
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int pk_v
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int rev_atk
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int rev_dmg_mul
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int sid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int size
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Dictionary<int, SkillData> skill
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Dictionary<int, int> skill_cd
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long skill_gen_cd
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long skill_gen_cdst
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int speed
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public UnitState states
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int teamid
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public teleping teleping
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public double x
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public double y
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.lx
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        double IMapUnit.ly
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public Dictionary<int, int> addResist { get; set; }
+
+        public int atkcdtm { get; set; }
+
+        public atking atking { get; set; }
+
+        public int atkrange { get; set; }
+
+        public atk_type atktp { get; set; }
+
+        public int atk_dmg_mul { get; set; }
+
+        public int atk_max { get; set; }
+
+        public int atk_min { get; set; }
+
+        public int atk_rate { get; set; }
+
+        public List<BState> bstates { get; set; }
+
+        public casting casting { get; set; }
+
+        public bool cfmv { get; set; }
+
+        public int cid { get; set; }
+
+        public int clanid { get; set; }
+
+        public int criatk { get; set; }
+
+        public int criatk_debuffs { get; set; }
+
+        public int cridmg { get; set; }
+
+        public int cur_kp { get; set; }
+
+        public int def { get; set; }
+
+        public IMapUnit DefaultMapUnit { get; set; }
+
+        public Dictionary<int, long> defend_tm_map { get; set; }
+
+        public int def_red { get; set; }
+
+        public int dmg_red { get; set; }
+
+        public int dobrate { get; set; }
+
+        public int dp { get; set; }
+
+        public int exatk { get; set; }
+
+        public int exatk_debuffs { get; set; }
+
+        public int exdmg { get; set; }
+
+        public int exp { get; set; }
+
+        public int exper_add { get; set; }
+
+        public follow follow { get; set; }
+
+        public int full_hp_rate { get; set; }
+
+        public int full_mp_rate { get; set; }
+
+        public bool ghost { get; set; }
+
+        public int grid_x { get; set; }
+
+        public int grid_y { get; set; }
+
+        public holding holding { get; set; }
+
+        public int hp { get; set; }
+
+        public int hpsuck { get; set; }
+
+        public int hpsuck_dmgmul { get; set; }
+
+        public int igatk_dmg_mul { get; set; }
+
+        public int igdef_rate { get; set; }
+
+        public int igdef_rate_debuffs { get; set; }
+
+        public int igdmg_red { get; set; }
+
+        public int iid { get; set; }
+
+        public int invisible { get; set; }
+
+        public bool in_pczone { get; set; }
+
+        public bool isdie { get; set; }
+
+        public jumping jumping { get; set; }
+
+        public int kp { get; set; }
+
+        public long last_atk_tm { get; set; }
+
+        public List<Point2D> last_mvpts { get; set; }
+
+        public int level { get; set; }
+
+        public int line { get; set; }
+
+        public int llid { get; set; }
+
+        public int lmpid { get; set; }
+
+        public int lvlsideid { get; set; }
+
+        public double lx { get; set; }
+
+        public double ly { get; set; }
+
+        public int map_id { get; set; }
+
+        public int matk_max { get; set; }
+
+        public int matk_min { get; set; }
+
+        public int max_dp { get; set; }
+
+        public int max_hp { get; set; }
+
+        public int max_mp { get; set; }
+
+        public int mid { get; set; }
+
+        public int miss_rate { get; set; }
+
+        public moving moving { get; set; }
+
+        public int mp { get; set; }
+
+        public int observer { get; set; }
+
+        public int org_init_x { get; set; }
+
+        public int org_init_y { get; set; }
+
+        public int owner_cid { get; set; }
+
+        public int pkatk { get; set; }
+
+        public int pkatkrate { get; set; }
+
+        public int pkatk_dmg_mul { get; set; }
+
+        public int pkdef { get; set; }
+
+        public int pkdmg_red { get; set; }
+
+        public int pkigdp_rate { get; set; }
+
+        public int pkigdp_rate_debuffs { get; set; }
+
+        public int pkmatk { get; set; }
+
+        public int pkmisrate { get; set; }
+
+        public pk_state_type pk_state { get; set; }
+
+        public int pk_v { get; set; }
+
+        public rednm_type rednm { get; set; }
+
+        public int rev_atk { get; set; }
+
+        public int rev_dmg_mul { get; set; }
+
+        public int sid { get; set; }
+
+        public int size { get; set; }
+
+        public Dictionary<int, SkillData> skill { get; set; }        
+
+        public Dictionary<int, int> skill_cd { get; set; }
+
+        public long skill_gen_cd { get; set; }
+
+        public long skill_gen_cdst { get; set; }
+
+        public int speed { get; set; }
+
+        public UnitState states { get; set; }
+
+        public int teamid { get; set; }
+
+        public teleping teleping { get; set; }
+
+        public double x { get; set; }
+
+        public double y { get; set; }
+     
+        public long pk_v_revtm { get; set; }
     }
 
     public class monsterconf_att
@@ -2710,7 +1524,7 @@ namespace SceneTest
         PKST_MAX = 4,    // 
     }
 
-    enum rednm_type
+    public enum rednm_type
     {
         RNT_NORMAL = 0,    // 普通
         RNT_RASCAL = 1,    // 无赖
@@ -3115,10 +1929,10 @@ namespace SceneTest
         public int lvl = 0;
     }
 
-    public class player_skill_data
-    {
-        public int skill_id { get; set; }
-        public int skill_level { get; set; }
-    }
+    //public class player_skill_data
+    //{
+    //    public int skill_id { get; set; }
+    //    public int skill_level { get; set; }
+    //}
 
 }

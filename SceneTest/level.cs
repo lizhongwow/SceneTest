@@ -3519,5 +3519,38 @@ namespace SceneTest
 
         }
 
+        public void player_respawn(IBaseUnit ply)
+        {
+            IMapUnit pinfo = ply.get_pack_data();
+            born_pos bornpos = null;
+            if (pinfo.lvlsideid > 0)
+            {
+                // 在阵营中
+                var side_conf = this.sides_conf[pinfo.lvlsideid];
+                bornpos = side_conf.born;
+
+
+            }
+            else
+            {
+                bornpos = this.born_map_conf;
+            }
+
+            pinfo.map_id = bornpos.mpid;
+            pinfo.x = Utility.random(bornpos.x, bornpos.w);
+            pinfo.y = Utility.random(bornpos.y, bornpos.h);
+            pinfo.last_mvpts = null;
+
+            ply.gmap.rmv_player_from_map(this, pinfo.sid);
+            if (this.gpmap_maxply > 0)
+            {
+                var gp_map = this.gp_maps[this.cid2gpid[pinfo.cid] - 1];
+                gp_map.maps[pinfo.map_id].add_player_to_map(this, pinfo.sid, ply);
+            }
+            else
+            {
+                this.maps[pinfo.map_id].add_player_to_map(this, pinfo.sid, ply);
+            }
+        }
     }
 }
