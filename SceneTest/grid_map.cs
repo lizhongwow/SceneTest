@@ -61,7 +61,7 @@ public class grid_map
 
     public Dictionary<int, map_item> map_dpitms = new Dictionary<int, map_item>();
 
-    public Dictionary<int, link_conf> add_links = new Dictionary<int, link_conf>();
+    public List<link_conf> add_links = new List<link_conf>();
 
     public int map_dpidseed = 1;
 
@@ -141,21 +141,21 @@ public class grid_map
         var monster_count = this.get_monster_desc_count();
         this.petmon_cache = new Dictionary<int, List<IBaseUnit>>();
 
-        this.tmtriggers = { };
-        this.areatriggers = { };
+        //this.tmtriggers = { };
+        //this.areatriggers = { };
 
-        this.useitmtriggers = { };
-        this.mistriggers = { };
-        this.othertriggers = { };
-        this.callmon_added = { };
+        //this.useitmtriggers = { };
+        //this.mistriggers = { };
+        //this.othertriggers = { };
+        this.callmon_added = new Dictionary<int, int>();
 
-        this.add_npcs = [];
-        this.add_links = [];
-        this.mapstats = [];
-        this.paths = { };
+        //this.add_npcs = [];
+        this.add_links = new List<link_conf>();
+        //this.mapstats = [];
+        this.paths = new Dictionary<int, List<Point2D>>();
         //this.team_drop_itm = {};
 
-        this.temp_sid_ary = int_ary.create_int_ary();
+        //this.temp_sid_ary = int_ary.create_int_ary();
 
 
 
@@ -2266,11 +2266,6 @@ public class grid_map
         }
     }
 
-    public bool is_grid_walkableEx(int grid_x, int grid_y)
-    {
-        throw new NotImplementedException();
-    }
-
     public Point2D valpoint_on_vector(double dest_x, double dest_y, double from_x, double from_y, Point2D vec)
     {
         //Utility.trace_info("dest_x["+from_x+"] dest_y["+from_y+"]\n");
@@ -2358,11 +2353,11 @@ public class grid_map
             }
         }
 
-        var skill_level_conf = Utility.get_skil_skill_lvl_desc(skill_id, caster_skil_data.skill_level);
+        var skill_level_conf = Utility.get_skil_skill_lvl_desc(skill_id, caster_skil_data.sklvl);
         if (skill_level_conf == null)
         {
             // Err: skill data error          
-            Utility.trace_err("persist_game cast skill monster iid[" + pl.iid + "] skill [" + skill_id + "] sklvl[" + caster_skil_data.skill_level + "]  data error\n");
+            Utility.trace_err("persist_game cast skill monster iid[" + pl.iid + "] skill [" + skill_id + "] sklvl[" + caster_skil_data.sklvl + "]  data error\n");
             return new cast_skill_res(game_err_code.SKIL_LVL_ERR);
         }
 
@@ -4134,7 +4129,7 @@ public class grid_map
 
     public link_conf get_link_by_gto(int gto)
     {
-        foreach(var l in this.map_conf.link)
+        foreach (var l in this.map_conf.link)
         {
             if (l.gto == gto)
                 return l;
@@ -4211,7 +4206,7 @@ public class grid_map
         //{
         //    val.calc_zone_sprite();
         //}
-        this.calc_zone_sprite();
+        //this.calc_zone_sprite();
 
         //    foreach (idx, val in this.map_sprites)
         //{
@@ -4287,180 +4282,187 @@ public class grid_map
 
         // 更新触发器
 
-        var to_rmv_tmtrgids = [];
-        var to_rmv_areatrgids = [];
-        var to_rmv_kmtrgids = [];
-        var to_rmv_uitmtrgids = [];
-        var to_rmv_mistrgids = [];
-        var to_add_trgconf = [];
-        var to_rmv_othertrgids = [];
+        //var to_rmv_tmtrgids = [];
+        //var to_rmv_areatrgids = [];
+        List<int> to_rmv_kmtrgids = new List<int>();
+        //var to_rmv_uitmtrgids = [];
+        //var to_rmv_mistrgids = [];
+        List<int> to_add_trgconf = new List<int>();
+        //var to_rmv_othertrgids = [];
 
-        foreach (trid, trg in this.tmtriggers)
-        {
-            trg.tmleft -= tm_elasped_s;
-            if (trg.tmleft > 0)
-            {
-                continue;
-            }
+        //foreach (trid, trg in this.tmtriggers)
+        //{
+        //    trg.tmleft -= tm_elasped_s;
+        //    if (trg.tmleft > 0)
+        //    {
+        //        continue;
+        //    }
 
-            // 触发
+        //    // 触发
 
-            --trg.cnt;
-            trg.tmleft = trg.conf.timer[0].tm;
+        //    --trg.cnt;
+        //    trg.tmleft = trg.conf.timer[0].tm;
 
-            if (trg.cnt <= 0)
-            {
-                to_rmv_tmtrgids.push(trid);
-            }
+        //    if (trg.cnt <= 0)
+        //    {
+        //        to_rmv_tmtrgids.push(trid);
+        //    }
 
-            this._trig_res(trg.conf, null, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-        }
+        //    this._trig_res(trg.conf, null, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+        //}
 
-        foreach (trid, trg in this.areatriggers)
-        {
-            foreach (ply in map_players)
-            {
-                if (trg.area[0].sideid != 0 && trg.area[0].sideid != ply.pinfo.lvlsideid)
-                {
-                    continue;
-                }
+        //foreach (trid, trg in this.areatriggers)
+        //{
+        //    foreach (ply in map_players)
+        //    {
+        //        if (trg.area[0].sideid != 0 && trg.area[0].sideid != ply.pinfo.lvlsideid)
+        //        {
+        //            continue;
+        //        }
 
-                if (ply.pinfo.x > trg.area[0].x && ply.pinfo.y > trg.area[0].y && ply.pinfo.x < trg.area[0].x + trg.area[0].width && ply.pinfo.y < trg.area[0].y + trg.area[0].height)
-                {
-                    // 触发
+        //        if (ply.pinfo.x > trg.area[0].x && ply.pinfo.y > trg.area[0].y && ply.pinfo.x < trg.area[0].x + trg.area[0].width && ply.pinfo.y < trg.area[0].y + trg.area[0].height)
+        //        {
+        //            // 触发
 
-                    if (!_trigger_attchk(ply, trg))
-                    {
-                        continue;
-                    }
+        //            if (!_trigger_attchk(ply, trg))
+        //            {
+        //                continue;
+        //            }
 
-                    to_rmv_areatrgids.push(trid);
+        //            to_rmv_areatrgids.push(trid);
 
-                    this._trig_res(trg, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-                }
-            }
-        }
+        //            this._trig_res(trg, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+        //        }
+        //    }
+        //}
 
         // 间隔判断是否经过了自然日（参考player的sync_db_data实现），若经过了自然日，则重置每日重复触发器
-        if ((cur_tm_s > this.last_check_tm + 5)) // 5秒一次
-        {
-            if (this.last_check_tm > 0)
-            {
-                var local_tm = sys.trans_local_time(cur_tm_s);
-                var last_trg_tm = sys.trans_local_time(this.last_check_tm);
+        //if ((cur_tm_s > this.last_check_tm + 5)) // 5秒一次
+        //{
+        //    if (this.last_check_tm > 0)
+        //    {
+        //        var local_tm = sys.trans_local_time(cur_tm_s);
+        //        var last_trg_tm = sys.trans_local_time(this.last_check_tm);
 
-                if ((_compare_ymd_tm(local_tm, last_trg_tm) > 0))
-                {
-                    foreach (trid, trconf in this.trigger_conf)
-                    {
-                        if ("dalyrep" in trconf)
-                        {
-                            // 重置每日重复触发器
-                            //Utility.trace_info("reset daly trigger!\n");
+        //        if ((_compare_ymd_tm(local_tm, last_trg_tm) > 0))
+        //        {
+        //            foreach (trid, trconf in this.trigger_conf)
+        //            {
+        //                if ("dalyrep" in trconf)
+        //                {
+        //                    // 重置每日重复触发器
+        //                    //Utility.trace_info("reset daly trigger!\n");
 
-                            if (trid in this.tmtriggers) 
-                            {
-                                this.tmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.areatriggers) 
-                            {
-                                to_rmv_areatrgids.push(trid);
-                            }
-                            else if (trid in this.kmtriggers) 
-                            {
-                                this.kmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.useitmtriggers) 
-                            {
-                                this.useitmtriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.mistriggers) 
-                            {
-                                this.mistriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else if (trid in this.othertriggers) 
-                            {
-                                this.othertriggers[trid].cnt = trconf.dalyrep;
-                            }
-                            else
-                            {
-                                to_add_trgconf.push(trid);
-                            }
-                        }
-                    }
-                }
-            }
-            this.last_check_tm = cur_tm_s;
-        }
+        //                    if (trid in this.tmtriggers) 
+        //                    {
+        //                        this.tmtriggers[trid].cnt = trconf.dalyrep;
+        //                    }
+        //                    else if (trid in this.areatriggers) 
+        //                    {
+        //                        to_rmv_areatrgids.push(trid);
+        //                    }
+        //                    else if (trid in this.kmtriggers) 
+        //                    {
+        //                        this.kmtriggers[trid].cnt = trconf.dalyrep;
+        //                    }
+        //                    else if (trid in this.useitmtriggers) 
+        //                    {
+        //                        this.useitmtriggers[trid].cnt = trconf.dalyrep;
+        //                    }
+        //                    else if (trid in this.mistriggers) 
+        //                    {
+        //                        this.mistriggers[trid].cnt = trconf.dalyrep;
+        //                    }
+        //                    else if (trid in this.othertriggers) 
+        //                    {
+        //                        this.othertriggers[trid].cnt = trconf.dalyrep;
+        //                    }
+        //                    else
+        //                    {
+        //                        to_add_trgconf.push(trid);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    this.last_check_tm = cur_tm_s;
+        //}
 
-        foreach (trid in to_rmv_tmtrgids)
+        //foreach (trid in to_rmv_tmtrgids)
+        //{
+        //    if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+        //}
+        //foreach (trid in to_rmv_areatrgids)
+        //{
+        //    if (trid in this.areatriggers) delete this.areatriggers[trid];
+        //}
+
+        foreach (var trid in to_rmv_kmtrgids)
         {
-            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+            if (this.kmtriggers.ContainsKey(trid))
+                this.kmtriggers.Remove(trid);
+
         }
-        foreach (trid in to_rmv_areatrgids)
-        {
-            if (trid in this.areatriggers) delete this.areatriggers[trid];
-        }
-        foreach (trid in to_rmv_kmtrgids)
-        {
-            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-        }
-        foreach (trid in to_rmv_uitmtrgids)
-        {
-            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-        }
-        foreach (trid in to_rmv_mistrgids)
-        {
-            if (trid in this.mistriggers) delete this.mistriggers[trid];
-        }
-        foreach (trid in to_rmv_othertrgids)
-        {
-            if (trid in this.othertriggers) delete this.othertriggers[trid];
-        }
-        foreach (trid in to_add_trgconf)
+        //foreach (trid in to_rmv_uitmtrgids)
+        //{
+        //    if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+        //}
+        //foreach (trid in to_rmv_mistrgids)
+        //{
+        //    if (trid in this.mistriggers) delete this.mistriggers[trid];
+        //}
+        //foreach (trid in to_rmv_othertrgids)
+        //{
+        //    if (trid in this.othertriggers) delete this.othertriggers[trid];
+        //}
+
+        foreach (var trid in to_add_trgconf)
         {
             this._add_triger(this.trigger_conf[trid]);
         }
 
         // 更新动态npc列表
-        for (var i = 0; i < this.add_npcs.Count; ++i)
-        {
-            var npc = this.add_npcs[i];
-            if (npc.dis_tm != 0 && npc.dis_tm <= cur_tm_s)
-            {
-                this.add_npcs.remove(i);
-                --i;
-                continue;
-            }
-        }
+        //for (var i = 0; i < this.add_npcs.Count; ++i)
+        //{
+        //    var npc = this.add_npcs[i];
+        //    if (npc.dis_tm != 0 && npc.dis_tm <= cur_tm_s)
+        //    {
+        //        this.add_npcs.remove(i);
+        //        --i;
+        //        continue;
+        //    }
+        //}
 
         // 更新动态npc列表
         for (var i = 0; i < this.add_links.Count; ++i)
         {
             var link = this.add_links[i];
-            if (link.dis_tm != 0 && link.dis_tm <= cur_tm_s)
+            //if (link.dis_tm != 0 && link.dis_tm <= cur_tm_s)
             {
-                this.add_links.remove(i);
+                this.add_links.RemoveAt(i);
                 --i;
                 continue;
             }
         }
 
         // 更新地图技能状态对象
-        for (var i = 0; i < this.mapstats.Count; ++i)
-        {
-            var mapstat = this.mapstats[i];
-            var needrmv = _update_mapstat(mapstat, cur_tm_s, cur_clock_tm);
-            if (needrmv)
-            {
-                this.mapstats.remove(i);
-                --i;
+        //        for (var i = 0; i < this.mapstats.Count; ++i)
+        //        {
+        //            var mapstat = this.mapstats[i];
+        //            var needrmv = _update_mapstat(mapstat, cur_tm_s, cur_clock_tm);
+        //            if (needrmv)
+        //            {
+        //                this.mapstats.remove(i);
+        //                --i;
 
-                // bcast add_npcs msg
-                this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = mapstat.id}]});
+        //                // bcast add_npcs msg
+        //                this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = mapstat.id}]});
 
-        continue;
+        //        continue;
+        //    }
+        //}
     }
+
 
 
 
@@ -4512,6 +4514,16 @@ public class grid_map
         return (map_pk_setting_type)this.map_conf.pk;
     }
 
+    public void release_monster(IBaseUnit mon)
+    {
+
+    }
+
+    public void release_map()
+    {
+
+    }
+
     public void fin()
     {
         map_fined = true;
@@ -4521,192 +4533,276 @@ public class grid_map
             this.release_monster(val);
         }
         this.release_map();
-        this.temp_sid_ary.clear();
+        //this.temp_sid_ary.clear();
     }
 
     //debug_map();
     //Utility.trace_info("map [" + mapid +"] with ["+this.map_mons.Count+"] monster created\n");
-}
 
 
 
 
 
-public void init_path(path_conf)
-{
-    foreach (path in path_conf)
+
+    //public void init_path(path_conf)
+    //{
+    //    foreach (path in path_conf)
+    //    {
+    //        this.paths[path.id] < -path;
+    //    }
+    //}
+
+
+
+    //public void add_map_skills(skills )
+    //{
+    //    if (!map_skills)
+    //    {
+    //        this.map_skills = { };
+    //    }
+
+    //    foreach (skill in skills)
+    //    {
+    //        this.map_skills[skill.skid] < -skill;
+    //    }
+    //}
+
+
+
+    //public void _add_triger(trconf, tm_elasped_s= 0)
+    //{
+    //    if ("timer" in trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add timer triger["+trconf.id+"]\n");
+
+    //        var val = { tmleft = trconf.timer[0].tm - tm_elasped_s, cnt = trconf.timer[0].cnt, conf = trconf };
+    //        this.tmtriggers[trconf.id] < -val;
+
+    //        if ("showid" in trconf.timer[0])
+    //            {
+    //            // send add npc msg
+    //            this.broadcast_map_rpc(6, { tmtrigs =[{ showid = trconf.timer[0].showid, tm = val.tmleft + sys.time()}]});
+    //        }
+    //    }
+    //        else if ("area" in trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add area triger["+trconf.id+"]\n");
+
+    //        this.areatriggers[trconf.id] < -trconf;
+    //    }
+    //        else if ("km" in  trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add km triger["+trconf.id+"]\n");
+    //        var tr_km_conf = trconf.km[0];
+    //        var totalkmcnt = tr_km_conf.kmcnt;
+    //        if ("mulply" in tr_km_conf && tr_km_conf.mulply == 1 )
+    //            {
+    //            totalkmcnt *= get_plycnt();
+    //        }
+    //        this.kmtriggers[trconf.id] < - { cnt = tr_km_conf.cnt, kmcnt = 0, tkmcnt = totalkmcnt,conf = trconf};
+
+    //        if ("showid" in trconf.km[0])
+    //            {
+    //            // send add npc msg
+    //            this.broadcast_map_rpc(6, { kmtrigs =[{ showid = tr_km_conf.showid, mid = tr_km_conf.mid, cnt = totalkmcnt, kmcnt = 0}]});
+    //        }
+    //    }
+    //        else if ("useitm" in trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add useitm triger["+trconf.id+"]\n");
+
+    //        this.useitmtriggers[trconf.id] < - { cnt = trconf.useitm[0].cnt, conf = trconf};
+    //    }
+    //        else if ("mis" in trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add useitm triger["+trconf.id+"]\n");
+
+    //        this.mistriggers[trconf.id] < - { cnt = trconf.mis[0].cnt, conf = trconf};
+    //    }
+    //        else if ("other" in trconf)
+    //        {
+    //        //Utility.trace_info("map["+this.mapid+"] add other triger["+trconf.id+"]\n");
+
+    //        this.othertriggers[trconf.id] < - { cnt = trconf.other[0].cnt, conf = trconf};
+    //    }
+    //}
+
+
+
+    //public void add_npc_to_map(npc)
+    //{
+    //    if (!(npc.nid in game_data_conf.npcs.npc))
+    //    {
+    //        // err : no such NPC
+    //        //Utility.trace_info("no such npc\n");
+    //        return game_err_code.PARAMETER_ERR;
+    //    }
+
+    //    var cur_tm_s = sys.time();
+
+    //    var add_npc = [];
+
+    //    var tmed_addnpc = npc;
+    //    if (npc.dis_tm > 0)
+    //    {
+    //        tmed_addnpc = sys.deep_clone(npc);
+    //        tmed_addnpc.dis_tm += cur_tm_s;
+    //    }
+
+    //    this.add_npcs.push(tmed_addnpc);
+    //    add_npc.push(tmed_addnpc);
+
+    //    // broad add npc msg
+    //    this.broadcast_map_rpc(6, { npcs = add_npc});
+
+    //    return game_err_code.RES_OK;
+    //}
+
+    public void call_world_army_in_map(List<map_mon_conf> world_army_conf)
     {
-        this.paths[path.id] < -path;
-    }
-}
+        if (blvlmap) return;
 
-
-
-public void add_map_skills(skills )
-{
-    if (!map_skills)
-    {
-        this.map_skills = { };
-    }
-
-    foreach (skill in skills)
-    {
-        this.map_skills[skill.skid] < -skill;
-    }
-}
-
-
-
-public void _add_triger(trconf, tm_elasped_s= 0)
-{
-    if ("timer" in trconf)
+        //sys.trace( sys.SLT_DETAIL, "call_world_army_in_map mapid=" + world_army_conf.mapid + "\n" );
+        //if ("m" in world_army_conf )
         {
-        //Utility.trace_info("map["+this.mapid+"] add timer triger["+trconf.id+"]\n");
-
-        var val = { tmleft = trconf.timer[0].tm - tm_elasped_s, cnt = trconf.timer[0].cnt, conf = trconf };
-        this.tmtriggers[trconf.id] < -val;
-
-        if ("showid" in trconf.timer[0])
+            Dictionary<int, List<IBaseUnit>> has_mons = new Dictionary<int, List<IBaseUnit>>();
+            foreach (var m in world_army_conf)
             {
-            // send add npc msg
-            this.broadcast_map_rpc(6, { tmtrigs =[{ showid = trconf.timer[0].showid, tm = val.tmleft + sys.time()}]});
-        }
-    }
-        else if ("area" in trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] add area triger["+trconf.id+"]\n");
-
-        this.areatriggers[trconf.id] < -trconf;
-    }
-        else if ("km" in  trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] add km triger["+trconf.id+"]\n");
-        var tr_km_conf = trconf.km[0];
-        var totalkmcnt = tr_km_conf.kmcnt;
-        if ("mulply" in tr_km_conf && tr_km_conf.mulply == 1 )
-            {
-            totalkmcnt *= get_plycnt();
-        }
-        this.kmtriggers[trconf.id] < - { cnt = tr_km_conf.cnt, kmcnt = 0, tkmcnt = totalkmcnt,conf = trconf};
-
-        if ("showid" in trconf.km[0])
-            {
-            // send add npc msg
-            this.broadcast_map_rpc(6, { kmtrigs =[{ showid = tr_km_conf.showid, mid = tr_km_conf.mid, cnt = totalkmcnt, kmcnt = 0}]});
-        }
-    }
-        else if ("useitm" in trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] add useitm triger["+trconf.id+"]\n");
-
-        this.useitmtriggers[trconf.id] < - { cnt = trconf.useitm[0].cnt, conf = trconf};
-    }
-        else if ("mis" in trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] add useitm triger["+trconf.id+"]\n");
-
-        this.mistriggers[trconf.id] < - { cnt = trconf.mis[0].cnt, conf = trconf};
-    }
-        else if ("other" in trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] add other triger["+trconf.id+"]\n");
-
-        this.othertriggers[trconf.id] < - { cnt = trconf.other[0].cnt, conf = trconf};
-    }
-}
-public void _trig_res(trconf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids)
-{
-    //Utility.trace_info("map["+this.mapid+"] _trig_res ["+trconf.id+"]\n");
-
-    // 触发触发器
-
-    if ("rate" in trconf)
-        {
-        var judg = Utility.random(0, 100);
-        //Utility.trace_info("judg ["+judg+"] trig_res\n");
-        if (judg > trconf.rate)
-        {
-            // 触发几率未命中，不产生效果
-            //Utility.trace_info("miss trig_res\n");
-            return;
-        }
-    }
-
-    if ("mod_monatt" in trconf )
-        {
-        var mod_monatt_conf = trconf.mod_monatt[0];
-        if ("matt" in mod_monatt_conf)
-            {
-            foreach (modatt in mod_monatt_conf.matt)
-            {
-                var adjust_att = { };
-                if ("spwan_time" in modatt )
-                    {
-                    adjust_att.respawn_tm < -modatt.spwan_time;
-                }
-                if (adjust_att.Count > 0)
+                List<IBaseUnit> mons = null;
+                if (!has_mons.ContainsKey(m.mid))
                 {
-                    foreach (mon in this.map_mons)
+                    mons = new List<IBaseUnit>();
+                    foreach (var val in this.map_mons.Values)
                     {
-                        if (mon.mondata.mid == modatt.mid)
+                        if (val.get_pack_data().mid == m.mid)
                         {
-                            foreach (key, val in adjust_att )
-                                {
-                                mon.mondata[key] = val;
-                            }
+                            mons.push(val);
                         }
                     }
+                    has_mons[m.mid] = mons;
+                }
+                else
+                {
+                    mons = has_mons[m.mid];
+                }
+
+                IBaseUnit mon = null;
+                if (mons.Count > 0)
+                {
+                    mon = mons.pop();
+                    if (mon.get_pack_data().isdie)
+                    {
+                        mon.respawn(100, true);
+                    }
+                    continue;
+                }
+
+                // 可以创建
+                mon = this.create_monster_byconf(m);
+                if (mon == null)
+                {
+                    Utility.trace_err("Err: in map [" + this.mapid + "] callmon mid [" + m.mid + "] create error!\n");
+                    return;
+                }
+
+                mon.gmap = this;
+                IMapUnit mondata = mon.get_pack_data();
+                mon.on_pos_change(mondata.x, mondata.y);
+
+                this.map_mons[mondata.iid] = mon;
+                this.map_sprites[mondata.iid] = mon;
+
+                if (this.map_mon_bymid.ContainsKey(mondata.mid))
+
+                {
+                    this.map_mon_bymid[mondata.mid] = new List<IBaseUnit>() { mon };
+                }
+                else
+                {
+                    this.map_mon_bymid[mondata.mid].push(mon);
                 }
             }
         }
+
+        //if ("n" in world_army_conf )
+        //{
+        //    foreach (n in world_army_conf.n)
+        //    {
+        //        this.add_npc_to_map(n);
+        //    }
+        //}
     }
 
-    if ("addmon" in trconf)
+    public game_err_code add_monster_to_map(map_mon_conf amconf)
+    {
+        var m = this.create_monster_byconf(amconf);
+        if (m == null)
         {
-        // 新增怪物
-        var added_mon = this.add_init(trconf.addmon[0]);
-
-        if (this.blvlmap && added_mon.Count > 0)
-        {
-            // 副本地图，根据难度调整怪物等级
-            worldsvr._on_triger_addmons(added_mon);
+            //Utility.trace_err("Err: in map [" + mapid +"] add_monster_to_map mid ["+amconf.mid+"] create error!\n");
+            return game_err_code.PARAMETER_ERR;
         }
+
+        if (amconf.sideid > 0)
+        {
+            m.get_pack_data().lvlsideid = amconf.sideid;
+        }
+
+        m.gmap = this;
+        IMapUnit mondata = m.get_pack_data();
+        m.on_pos_change(mondata.x, mondata.y);
+
+        this.map_mons[mondata.iid] = m;
+        this.map_sprites[mondata.iid] = m;
+
+        if (!this.map_mon_bymid.ContainsKey(mondata.mid))
+
+        {
+            this.map_mon_bymid[mondata.mid] = new List<IBaseUnit>() { m };
+        }
+        else
+        {
+            this.map_mon_bymid[mondata.mid].push(m);
+        }
+
+        return game_err_code.RES_OK;
     }
 
-    // 根据callmon触发结果新增添加或复活boss触发结果功能，若新增的话，新增的怪物是死的
-    if ("callmon" in trconf)
+    public int call_cost_monster(callmon_conf call_mon_conf, int cost_tp, int max_can_cost)
+    {
+        var cur_tm_s = Utility.time();
+        var total_cost_cnt = 0;
+        if (max_can_cost > 0 && call_mon_conf.map_mon.Count > 0)
         {
-        // 召唤怪物
-        //Utility.trace_info("map["+this.mapid+"] callmon ["+trconf.id+"]\n");
+            List<IBaseUnit> new_added_mons = new List<IBaseUnit>();
+            foreach (var m in call_mon_conf.map_mon)
+            {
+                //if (!(cost_tp in m) ) continue;
 
-        var cur_tm_s = sys.time();
-        var call_mon = [];
-        var call_mon_conf = trconf.callmon[0];
-        if ("m" in call_mon_conf)
-            {
-            var m;
-            var new_added_mons = [];
-            foreach (m in call_mon_conf.m)
-            {
+                //var call_cost = m[cost_tp];
+                //if (call_cost <= 0) continue;
+
+                //if (total_cost_cnt + call_cost > max_can_cost) continue;
+
                 var mon_cnt = 0;
-                var mon = null;
-                foreach (val in this.map_mons)
+                IBaseUnit mon = null;
+                foreach (var val in this.map_mons.Values)
                 {
-                    if (val.mondata.mid == m.mid && val.mondata.isdie)
+                    IMapUnit mondata = val.get_pack_data();
+                    if (mondata.mid == m.mid && mondata.isdie)
                     {
                         mon = val;
                         break;
                     }
                 }
-                if (!mon)
+                if (mon == null)
                 {
                     // 创建
                     //Utility.trace_info("callmon["+m.mid+"], create\n");
 
                     var bcrt = true;
-                    if (m.mid in this.callmon_added)
-                        {
-                        if (this.callmon_added[m.mid] >= call_mon_conf.mcnt[m.mid].cnt)
+                    if (this.callmon_added.ContainsKey(m.mid))
+                    {
+                        if (this.callmon_added[m.mid] >= call_mon_conf.mcnt.cnt)
                         {
                             bcrt = false; // 达到最大数量，不能创建
                         }
@@ -4715,49 +4811,48 @@ public void _trig_res(trconf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_
                     if (bcrt)
                     {
                         // 可以创建
-                        mon = this.create_monster_byconf(m, "sg_monster");
+                        mon = this.create_monster_byconf(m);
                         if (mon == null)
                         {
                             Utility.trace_err("Err: in map [" + this.mapid + "] callmon mid [" + m.mid + "] create error!\n");
-                            return;
+                            return -1;
                         }
 
+                        //total_cost_cnt += call_cost;
                         mon.gmap = this;
-                        mon.on_pos_change(mon.mondata.x, mon.mondata.y);
+                        IMapUnit mondata = mon.get_pack_data();
+                        mon.on_pos_change(mondata.x, mondata.y);
 
-                        this.map_mons[mon.get_monster_iid()] < -mon;
-                        this.map_sprites[mon.get_monster_iid()] < -mon;
+                        this.map_mons[mondata.iid] = mon;
+                        this.map_sprites[mondata.iid] = mon;
 
-                        if (!(mon.mondata.mid in this.map_mon_bymid))
-                            {
-                            this.map_mon_bymid[mon.mondata.mid] < - [mon];
+                        if (!this.map_mon_bymid.ContainsKey(mondata.mid))
+                        {
+                            this.map_mon_bymid[mondata.mid] = new List<IBaseUnit>() { mon };
                         }
-                            else
-                            {
-                            this.map_mon_bymid[mon.mondata.mid].push(mon);
+                        else
+                        {
+                            this.map_mon_bymid[mondata.mid].push(mon);
                         }
 
-                        mon.set_add_conf(m);
+                        //mon.set_add_conf(m);
 
                         new_added_mons.push(mon);
 
-                        if (!(m.mid in this.callmon_added))
-                            {
-                            this.callmon_added[m.mid] < -1;
-                        }
-                            else
-                            {
-                            ++this.callmon_added[m.mid];
-                        }
+                        if (this.callmon_added.ContainsKey(m.mid))
+                            this.callmon_added[m.mid]++;
+                        else
+                            this.callmon_added[m.mid] = 1;
                     }
                 }
                 else
                 {
                     // 死亡则复活
-                    if (mon.mondata.isdie)
+                    if (mon.get_pack_data().isdie)
                     {
                         //Utility.trace_info("callmon["+mon.mondata.mid+"], respawn\n");
-                        mon.respawn(true);
+                        mon.respawn(100, true);
+                        //total_cost_cnt += call_cost;
                     }
                     else
                     {
@@ -4765,15 +4860,7 @@ public void _trig_res(trconf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_
                     }
                 }
 
-                if (("clanbcast" in m) && (m.clanbcast == 1))
-                    {
-                    // 需要在全帮派广播怪物召唤消息
-                    if (trig_spr && (trig_spr.get_sprite_type() == map_sprite_type.MstPlayer) && ("clanid" in trig_spr.pinfo))
-                        {
-                        // broad cast clan_msg msg
-                        _broad_cast_clan_msg(trig_spr.pinfo.clanid, 226, { tp = 5, callmid = m.mid, cid = trig_spr.pinfo.cid, name = trig_spr.pinfo.name}, clan_c_tp.CCT_NONE);
-                    }
-                }
+                if (total_cost_cnt >= max_can_cost) break;
             }
 
             if (this.blvlmap && new_added_mons.Count > 0)
@@ -4782,877 +4869,307 @@ public void _trig_res(trconf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_
                 worldsvr._on_triger_addmons(new_added_mons);
             }
         }
-        //else
-        //{
-        //    //Utility.trace_err("map["+this.mapid+"] callmon ["+trconf.id+"] call_mon_conf without m\n");
-        //}
+        return total_cost_cnt;
     }
 
-    if (this.blvlmap && ("call_city_mon" in trconf) )
-        {
-        if (worldsvr.clter_conf && worldsvr.clter_conf.tp == clan_teritory_type.CTT_WAR_TERRITORY)
-        {
-            var clterid = worldsvr.clter_conf.id;
-            var call_city_mon_conf = trconf.call_city_mon[0];
-
-            var glbdata_mgr = global_data_mgrs.glbdata;
-            glbdata_mgr.lock_data(db_glbdata_datatype.DBGDT_CLAN_TER, server_const.GLOBAL_DATA_LOCK_TM); // 锁定数据对象，注意，所有跳出函数代码分支必须要有unlock
-            var gld_clanter_data = _get_clanter_data();
-            if (gld_clanter_data)
-            {
-                var glb_clanter_info = gld_clanter_data.get_data();
-                if (clterid in glb_clanter_info.data )
-                    {
-                    var clanter_info = glb_clanter_info.data[clterid];
-                    if (clanter_info && !clanter_info.onwar && clanter_info.clanid > 0 &&
-                        ("stastic_cost" in clanter_info) && ("cost_callmon" in clanter_info.stastic_cost) )
-                        {
-                        //sys.dumpobj( clanter_info.cost );     
-                        var cost_callmon_data = clanter_info.stastic_cost.cost_callmon;
-                        if (call_city_mon_conf.cost_tp == "yb")
-                        {
-                            if (cost_callmon_data.yb > call_city_mon_conf.min_cost)
-                            {
-                                var call_mon_cost = this.call_cost_monster(call_city_mon_conf, call_city_mon_conf.cost_tp, cost_callmon_data.yb);
-                                if (call_mon_cost > 0)
-                                {
-                                    cost_callmon_data.yb -= call_mon_cost;
-                                    //Utility.trace_info("call_city_mon call_mon_cost yb=["+call_mon_cost+"]\n");    
-                                    gld_clanter_data.mod_data(glb_clanter_info);
-                                    gld_clanter_data.db_update();
-                                }
-                            }
-                        }
-                        else if (call_city_mon_conf.cost_tp == "gold")
-                        {
-                            if (cost_callmon_data.gld > call_city_mon_conf.min_cost)
-                            {
-                                var call_mon_cost = this.call_cost_monster(call_city_mon_conf, call_city_mon_conf.cost_tp, can_use_gold);
-                                if (call_mon_cost > 0)
-                                {
-                                    cost_callmon_data.gld -= call_mon_cost;
-                                    //Utility.trace_info("call_city_mon call_mon_cost gld=["+call_mon_cost+"]\n");  
-                                    gld_clanter_data.mod_data(glb_clanter_info);
-                                    gld_clanter_data.db_update();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            glbdata_mgr.unlock_data(db_glbdata_datatype.DBGDT_CLAN_TER);  // 解锁                   
-        }
-    }
-
-    if ("addbzone" in trconf )
-        {
-        // 新增动态障碍
-        foreach (addb in trconf.addbzone)
-        {
-            this.add_bzone(addb.id, addb.x, addb.y, addb.w, addb.h);
-        }
-    }
-
-    if ("rmvbzone" in trconf )
-        {
-        // 删除动态障碍
-        foreach (rmvb in trconf.rmvbzone)
-        {
-            this.rmv_bzone(rmvb.id);
-        }
-    }
-
-    if ("addtriger" in trconf)
-        {
-        // 新增触发器
-        foreach (addt in trconf.addtriger)
-        {
-            if (addt in this.trigger_conf)
-                {
-                to_add_trgconf.push(addt);
-            }
-        }
-    }
-
-    if ("ran_addtr" in trconf)
-        {
-        // 随机新增触发器
-        var ran_addtr_conf = trconf.ran_addtr[0];
-        var add_idxs = _n_choose_n(ran_addtr_conf.addtr, ran_addtr_conf.cnt);
-        foreach (idx in add_idxs)
-        {
-            // 新增触发器                
-            var add_ids = ran_addtr_conf.addtr[idx].ids;
-            //sys.dumpobj( add_ids );
-            foreach (addt in add_ids)
-            {
-                if (addt in this.trigger_conf ) 
-                    {
-                    to_add_trgconf.push(addt);
-                }
-            }
-        }
-    }
-
-    if ("rmvtriger" in trconf)
-        {
-        // 移除触发器
-        foreach (rmvt in trconf.rmvtriger)
-        {
-            if (rmvt in this.tmtriggers)
-                {
-                to_rmv_tmtrgids.push(rmvt);
-            }
-                else if (rmvt in this.areatriggers)
-                {
-                to_rmv_areatrgids.push(rmvt);
-            }
-                else if (rmvt in this.kmtriggers)
-                {
-                to_rmv_kmtrgids.push(rmvt);
-            }
-                else if (rmvt in this.useitmtriggers)
-                {
-                to_rmv_uitmtrgids.push(rmvt);
-            }
-                else if (rmvt in this.mistriggers)
-                {
-                to_rmv_mistrgids.push(rmvt);
-            }
-                else if (rmvt in this.othertriggers)
-                {
-                to_rmv_othertrgids.push(rmvt);
-            }
-        }
-    }
-
-    if ("addnpc" in trconf)
-        {
-        Utility.trace_info("map[" + this.mapid + "] addnpc [" + trconf.id + "]\n");
-
-        var cur_tm_s = sys.time();
-
-        var add_npc = [];
-
-        foreach (addnpc in trconf.addnpc)
-        {
-            var tmed_addnpc = addnpc;
-            if (addnpc.dis_tm > 0)
-            {
-                tmed_addnpc = sys.deep_clone(addnpc);
-                tmed_addnpc.dis_tm += cur_tm_s;
-            }
-
-            this.add_npcs.push(tmed_addnpc);
-            add_npc.push(tmed_addnpc);
-        }
-
-        // broad add npc msg
-        this.broadcast_map_rpc(6, { npcs = add_npc});
-
-        //sys.dumpobj(add_npc);
-    }
-
-    if ("addlink" in trconf)
-        {
-        //Utility.trace_info("map["+this.mapid+"] addlink ["+trconf.id+"]\n");
-
-        var cur_tm_s = sys.time();
-
-        var addlinks = [];
-
-        foreach (addlink in trconf.addlink)
-        {
-            var tmed_addlink = addlink;
-            if (("dis_tm" in addlink) && addlink.dis_tm > 0)
-                {
-                tmed_addlink = sys.deep_clone(addlink);
-                tmed_addlink.dis_tm += cur_tm_s;
-            }
-
-            tmed_addlink.to < -tmed_addlink.gto;
-            this.add_links.push(tmed_addlink);
-            addlinks.push(tmed_addlink);
-        }
-
-        // broad add npc msg
-        this.broadcast_map_rpc(6, { links = addlinks});
-
-        //sys.dumpobj(addlinks);
-    }
-
-    if ("rmvlink" in trconf)
-        {
-        // TO DO : remove link
-    }
-
-    if ("modtrgtm" in trconf)
-        {
-        // 修改倒计时触发器触发时间
-
-        var cur_tm_s = sys.time();
-
-        var tmtrigs = [];
-
-        foreach (modtrgtm_conf in trconf.modtrgtm)
-        {
-            foreach (trid, trg in this.tmtriggers)
-                {
-                if (trid != modtrgtm_conf.tarid)
-                {
-                    continue;
-                }
-
-                trg.tmleft += modtrgtm_conf.tmadd;
-
-                if ("showid" in trg.conf.timer[0])
-                    {
-                    tmtrigs.push({ showid = trg.conf.timer[0].showid, tm = trg.tmleft + cur_tm_s});
-                }
-            }
-        }
-
-        if (tmtrigs.Count > 0)
-        {
-            // broad add npc msg
-            this.broadcast_map_rpc(6, { tmtrigs = tmtrigs});
-        }
-    }
-
-    if ("bcast" in trconf)
-        {
-        // broad sys msg
-        this.broadcast_map_rpc(160, { tp = 6, spec ={ tp = bcast_msg_tp.MAP_TRIGER_MSG, par = trconf.bcast}, msg = ""});
-    }
-
-    if (this.blvlmap)
+    public game_err_code kill_monster(IBaseUnit killer, int mid, long respawntm, int cnt)
     {
-        //Utility.trace_info("map["+this.mapid+"] _trig_res ["+trconf.id+"] blvlmap with trig_spr["+trig_spr+"]\n");
-
-        if (trig_spr)
+        var total_cnt = 0;
+        foreach (var val in this.map_mons.Values)
         {
-            if ("modatt" in trconf)
-                {
-                // 修改属性，如荣誉、经验值、游戏币等
-                worldsvr._trig_modatt(trig_spr, trconf.modatt[0]);
-            }
-
-            if ("addstat" in trconf)
-                {
-                // 加buffer
-                worldsvr._trig_addstat(trig_spr, trconf.addstat);
-            }
-        }
-        else
-        {
-            if ("modatt" in trconf)
-                {
-                // 修改属性，如荣誉、经验值、游戏币等
-                worldsvr._trig_modatt(null, trconf.modatt[0]);
-            }
-        }
-
-        if ("vkm" in trconf)
+            IMapUnit mondata = val.get_pack_data();
+            if (mondata.mid != mid)
             {
-            // 虚拟杀怪
-            worldsvr._trig_vkm(trig_spr, trconf.vkm, this);
-        }
-
-        if ("act_finchk" in trconf)
-            {
-            // 副本结束
-            worldsvr._trig_active_finchk(trconf.act_finchk == 1);
-        }
-
-        if ("finlvl" in trconf)
-            {
-            // 副本结束
-            worldsvr._trig_finlvl(trig_spr, trconf.finlvl, this);
-        }
-    }
-}
-
-
-public void add_npc_to_map(npc)
-{
-    if (!(npc.nid in game_data_conf.npcs.npc))
-        {
-        // err : no such NPC
-        //Utility.trace_info("no such npc\n");
-        return game_err_code.PARAMETER_ERR;
-    }
-
-    var cur_tm_s = sys.time();
-
-    var add_npc = [];
-
-    var tmed_addnpc = npc;
-    if (npc.dis_tm > 0)
-    {
-        tmed_addnpc = sys.deep_clone(npc);
-        tmed_addnpc.dis_tm += cur_tm_s;
-    }
-
-    this.add_npcs.push(tmed_addnpc);
-    add_npc.push(tmed_addnpc);
-
-    // broad add npc msg
-    this.broadcast_map_rpc(6, { npcs = add_npc});
-
-    return game_err_code.RES_OK;
-}
-
-public void call_world_army_in_map(world_army_conf )
-{
-    if (blvlmap) return;
-
-    //sys.trace( sys.SLT_DETAIL, "call_world_army_in_map mapid=" + world_army_conf.mapid + "\n" );
-    if ("m" in world_army_conf )
-        {
-        var has_mons = { };
-        foreach (m in world_army_conf.m)
-        {
-            var mons = null;
-            if (!(m.mid in has_mons) )
-                {
-                mons = [];
-                foreach (val in this.map_mons)
-                {
-                    if (val.mondata.mid == m.mid)
-                    {
-                        mons.push(val);
-                    }
-                }
-                has_mons[m.mid] < -mons;
-            }
-                else
-                {
-                mons = has_mons[m.mid];
-            }
-
-            var mon = null;
-            if (mons.Count > 0)
-            {
-                mon = mons.pop();
-                if (mon.mondata.isdie)
-                {
-                    mon.respawn(true);
-                }
                 continue;
             }
 
-            // 可以创建
-            mon = this.create_monster_byconf(m, "sg_monster");
-            if (mon == null)
+            if (val.isdie())
             {
-                Utility.trace_err("Err: in map [" + this.mapid + "] callmon mid [" + m.mid + "] create error!\n");
-                return;
+                continue;
             }
 
-            mon.gmap = this;
-            mon.on_pos_change(mon.mondata.x, mon.mondata.y);
+            mondata.respawn_tm = respawntm;
+            val.die(killer);
 
-            this.map_mons[mon.get_monster_iid()] < -mon;
-            this.map_sprites[mon.get_monster_iid()] < -mon;
+            //var die_msg_rpc = { iid = val.mondata.iid };
+            //if (killer)
+            //{
+            //    die_msg_rpc.frm_iid < -killer.get_pack_data().iid;
+            //}
+            //// broad cast die msg
+            ////sprite.gmap.broadcast_map_rpc(25, die_msg_rpc);
+            //val.broad_cast_zone_msg_and_self(25, die_msg_rpc);
 
-            if (!(mon.mondata.mid in this.map_mon_bymid))
-                {
-                this.map_mon_bymid[mon.mondata.mid] < - [mon];
-            }
-                else
-                {
-                this.map_mon_bymid[mon.mondata.mid].push(mon);
-            }
-        }
-    }
-
-    if ("n" in world_army_conf )
-        {
-        foreach (n in world_army_conf.n)
-        {
-            this.add_npc_to_map(n);
-        }
-    }
-}
-
-public void add_monster_to_map(amconf)
-{
-    var m = this.create_monster_byconf(amconf, "sg_monster");
-    if (m == null)
-    {
-        //Utility.trace_err("Err: in map [" + mapid +"] add_monster_to_map mid ["+amconf.mid+"] create error!\n");
-        return game_err_code.PARAMETER_ERR;
-    }
-
-    if ("sideid" in amconf)
-        {
-        m.mondata.lvlsideid = amconf.sideid;
-    }
-
-    m.gmap = this;
-    m.on_pos_change(m.mondata.x, m.mondata.y);
-
-    this.map_mons[m.get_monster_iid()] < -m;
-    this.map_sprites[m.get_monster_iid()] < -m;
-
-    if (!(m.mondata.mid in this.map_mon_bymid))
-        {
-        this.map_mon_bymid[m.mondata.mid] < - [m];
-    }
-        else
-        {
-        this.map_mon_bymid[m.mondata.mid].push(m);
-    }
-
-    return game_err_code.RES_OK;
-}
-
-public void call_cost_monster(call_mon_conf, cost_tp, max_can_cost )
-{
-    var cur_tm_s = sys.time();
-    var total_cost_cnt = 0;
-    if (max_can_cost > 0 && ("m" in call_mon_conf) )
-        {
-        var m;
-        var new_added_mons = [];
-        foreach (m in call_mon_conf.m)
-        {
-            if (!(cost_tp in m) ) continue;
-
-            var call_cost = m[cost_tp];
-            if (call_cost <= 0) continue;
-
-            if (total_cost_cnt + call_cost > max_can_cost) continue;
-
-            var mon_cnt = 0;
-            var mon = null;
-            foreach (val in this.map_mons)
+            ++total_cnt;
+            if (total_cnt >= cnt)
             {
-                if (val.mondata.mid == m.mid && val.mondata.isdie)
-                {
-                    mon = val;
-                    break;
-                }
+                break;
             }
-            if (!mon)
+        }
+
+        return game_err_code.RES_OK;
+    }
+
+    public void init_trigger(List<trigger_conf> conf, long tm_elasped_s = 0)
+    {
+        //Utility.trace_info("map["+this.mapid+"] init triger:\n");
+        //sys.dumpobj(conf);
+
+
+
+        foreach (var trconf in conf)
+        {
+            if (trconf.initcr == 1)
             {
-                // 创建
-                //Utility.trace_info("callmon["+m.mid+"], create\n");
-
-                var bcrt = true;
-                if (m.mid in this.callmon_added)
-                    {
-                    if (this.callmon_added[m.mid] >= call_mon_conf.mcnt[m.mid].cnt)
-                    {
-                        bcrt = false; // 达到最大数量，不能创建
-                    }
-                }
-
-                if (bcrt)
-                {
-                    // 可以创建
-                    mon = this.create_monster_byconf(m, "sg_monster");
-                    if (mon == null)
-                    {
-                        Utility.trace_err("Err: in map [" + this.mapid + "] callmon mid [" + m.mid + "] create error!\n");
-                        return;
-                    }
-
-                    total_cost_cnt += call_cost;
-                    mon.gmap = this;
-                    mon.on_pos_change(mon.mondata.x, mon.mondata.y);
-
-                    this.map_mons[mon.get_monster_iid()] < -mon;
-                    this.map_sprites[mon.get_monster_iid()] < -mon;
-
-                    if (!(mon.mondata.mid in this.map_mon_bymid))
-                        {
-                        this.map_mon_bymid[mon.mondata.mid] < - [mon];
-                    }
-                        else
-                        {
-                        this.map_mon_bymid[mon.mondata.mid].push(mon);
-                    }
-
-                    mon.set_add_conf(m);
-
-                    new_added_mons.push(mon);
-
-                    if (!(m.mid in this.callmon_added))
-                        {
-                        this.callmon_added[m.mid] < -1;
-                    }
-                        else
-                        {
-                        ++this.callmon_added[m.mid];
-                    }
-                }
-            }
-            else
-            {
-                // 死亡则复活
-                if (mon.mondata.isdie)
-                {
-                    //Utility.trace_info("callmon["+mon.mondata.mid+"], respawn\n");
-                    mon.respawn(true);
-                    total_cost_cnt += call_cost;
-                }
-                else
-                {
-                    //Utility.trace_info("callmon["+mon.mondata.mid+"], nothing\n");
-                }
+                // 初始化时创建             
+                this._add_triger(trconf, tm_elasped_s);
             }
 
-            if (total_cost_cnt >= max_can_cost) break;
-        }
+            this.trigger_conf[trconf.id] = trconf;
 
-        if (this.blvlmap && new_added_mons.Count > 0)
-        {
-            // 副本地图，根据难度调整怪物等级
-            worldsvr._on_triger_addmons(new_added_mons);
+            //Utility.trace_info("map["+this.mapid+"] init triger["+trconf.id+"]\n");
         }
     }
-    return total_cost_cnt;
-}
 
-public void kill_monster(killer, mid, tm, cnt)
-{
-    var total_cnt = 0;
-    foreach (val in this.map_mons)
+
+
+    public void broadcast_map_rpc(cmd_id, data)
     {
-        if (val.mondata.mid != mid)
-        {
-            continue;
-        }
-
-        if (val.isdie())
-        {
-            continue;
-        }
-
-        val.mondata.respawntm = tm;
-        val.die(killer);
-
-        var die_msg_rpc = { iid = val.mondata.iid };
-        if (killer)
-        {
-            die_msg_rpc.frm_iid < -killer.get_pack_data().iid;
-        }
-        // broad cast die msg
-        //sprite.gmap.broadcast_map_rpc(25, die_msg_rpc);
-        val.broad_cast_zone_msg_and_self(25, die_msg_rpc);
-
-        ++total_cnt;
-        if (total_cnt >= cnt)
-        {
-            break;
-        }
+        return svr.mul_snd_rpc(this.get_player_sids(), this.get_player_sid_count(), cmd_id, data);
     }
-
-    return game_err_code.RES_OK;
-}
-
-public void init_trigger(conf, tm_elasped_s= 0)
-{
-    //Utility.trace_info("map["+this.mapid+"] init triger:\n");
-    //sys.dumpobj(conf);
-
-    if (!conf)
+    public void broadcast_map_rpc_except(cmd_id, except, data)
     {
-        return;
+        return svr.mul_snd_rpc_except(this.get_player_sids(), this.get_player_sid_count(), cmd_id, data, except);
     }
-
-    foreach (trconf in conf)
+    public void get_sprite_hp_info(sid, iid)
     {
-        if (trconf.initcr == 1)
+        if (iid in this.map_sprites)
         {
-            // 初始化时创建             
-            this._add_triger(trconf, tm_elasped_s);
-        }
-
-        this.trigger_conf[trconf.id] < -trconf;
-
-        //Utility.trace_info("map["+this.mapid+"] init triger["+trconf.id+"]\n");
-    }
-}
-
-
-
-public void broadcast_map_rpc(cmd_id, data)
-{
-    return svr.mul_snd_rpc(this.get_player_sids(), this.get_player_sid_count(), cmd_id, data);
-}
-public void broadcast_map_rpc_except(cmd_id, except, data)
-{
-    return svr.mul_snd_rpc_except(this.get_player_sids(), this.get_player_sid_count(), cmd_id, data, except);
-}
-public void get_sprite_hp_info(sid, iid)
-{
-    if (iid in this.map_sprites)
-        {
-        var pinfo = this.map_sprites[iid].get_pack_data();
+            var pinfo = this.map_sprites[iid].get_pack_data();
             ::send_rpc(sid, 53, { res = 1, info = pinfo}); // send hp info msg
-    }
+        }
         else
         {
             ::send_rpc(sid, 53, { res = -1}); // send hp info msg
+        }
     }
-}
-public void add_bzone(id, x, y, w, h)
-{
-    this.add_block_zone(id, y, x, y + h, x + w);
-
-    // 通知客户端动态障碍变化
-    // send add_npcs msg
-    this.broadcast_map_rpc(6, { blockzone = 1, bzadd =[{ id = id, left = x, right = x + w, top = y, bottom = y + h}]});
-}
-public void rmv_bzone(id)
-{
-    this.rmv_block_zone(id);
-
-    // 通知客户端动态障碍变化
-    // send add_npcs msg
-    this.broadcast_map_rpc(6, { blockzone = 2, bzrmv =[{ id = id}]});
-}
-
-
-//public void is_player_in_pk_zone(ply)
-//{
-//    if(!map_conf || !("pk_zone" in map_conf))
-//    {
-//        return false;
-//    }
-
-//    foreach(z in map_conf.pk_zone)
-//    {
-//        if(ply.pinfo.x > z.x && ply.pinfo.x < z.x + z.width && 
-//            ply.pinfo.y > z.y && ply.pinfo.y < z.y + z.height)
-//        {
-//            return true;
-//        }
-//    }
-
-//    return false;
-//}
-//和平区域判断  先用pk_zone表示
-
-//--------------------------------------------------  掉落  start---------------------------------------------------------
-public void push_dropitm(ply, drop_id, position, kmtp, extra_itms= null, exdrops= null, extra_roll_itms= null, allpick= false) // extra_itms={eqp=[{id=xxx,flvl=xxx}], itm=[{id=xxx,cnt=xxx}]}
-{
-    // 产生掉落道具
-    var vip_line_rate_mul = 0
-                if (!this.blvlmap && this.worldsvr.is_vip_line)
+    public void add_bzone(id, x, y, w, h)
     {
-        var game_conf = get_general_game_conf();
-        vip_line_rate_mul = game_conf.vip_line_rate_mul;
+        this.add_block_zone(id, y, x, y + h, x + w);
+
+        // 通知客户端动态障碍变化
+        // send add_npcs msg
+        this.broadcast_map_rpc(6, { blockzone = 1, bzadd =[{ id = id, left = x, right = x + w, top = y, bottom = y + h}]});
     }
-    //掉率提升状态
-    var buff_rate_mul = _get_bstate_rate_mul(ply);
-    var itms = drop_items(drop_id, ply.pinfo.carr, ply.pinfo.kmgldper, vip_line_rate_mul + buff_rate_mul);
-
-    //::g_dump( "push_dropitm, itms:", itms );
-
-    if (exdrops && exdrops.Count > 0)
+    public void rmv_bzone(id)
     {
-        // 产生时效性额外掉落
-        var cur_local_tm = sys.get_local_time();
-        foreach (val in exdrops)
+        this.rmv_block_zone(id);
+
+        // 通知客户端动态障碍变化
+        // send add_npcs msg
+        this.broadcast_map_rpc(6, { blockzone = 2, bzrmv =[{ id = id}]});
+    }
+
+
+    //public void is_player_in_pk_zone(ply)
+    //{
+    //    if(!map_conf || !("pk_zone" in map_conf))
+    //    {
+    //        return false;
+    //    }
+
+    //    foreach(z in map_conf.pk_zone)
+    //    {
+    //        if(ply.pinfo.x > z.x && ply.pinfo.x < z.x + z.width && 
+    //            ply.pinfo.y > z.y && ply.pinfo.y < z.y + z.height)
+    //        {
+    //            return true;
+    //        }
+    //    }
+
+    //    return false;
+    //}
+    //和平区域判断  先用pk_zone表示
+
+    //--------------------------------------------------  掉落  start---------------------------------------------------------
+    public void push_dropitm(ply, drop_id, position, kmtp, extra_itms= null, exdrops= null, extra_roll_itms= null, allpick= false) // extra_itms={eqp=[{id=xxx,flvl=xxx}], itm=[{id=xxx,cnt=xxx}]}
+    {
+        // 产生掉落道具
+        var vip_line_rate_mul = 0
+                    if (!this.blvlmap && this.worldsvr.is_vip_line)
         {
-            if (_check_tm(cur_local_tm, val.tmchk) != 0)
-            {
-                // 时间未到或已结束
-                continue;
-            }
+            var game_conf = get_general_game_conf();
+            vip_line_rate_mul = game_conf.vip_line_rate_mul;
+        }
+        //掉率提升状态
+        var buff_rate_mul = _get_bstate_rate_mul(ply);
+        var itms = drop_items(drop_id, ply.pinfo.carr, ply.pinfo.kmgldper, vip_line_rate_mul + buff_rate_mul);
 
-            var exitms = drop_items(val.drop, ply.pinfo.carr, ply.pinfo.kmgldper);
-            foreach (itm in exitms.itm)
+        //::g_dump( "push_dropitm, itms:", itms );
+
+        if (exdrops && exdrops.Count > 0)
+        {
+            // 产生时效性额外掉落
+            var cur_local_tm = sys.get_local_time();
+            foreach (val in exdrops)
             {
-                itms.itm.push(itm);
+                if (_check_tm(cur_local_tm, val.tmchk) != 0)
+                {
+                    // 时间未到或已结束
+                    continue;
+                }
+
+                var exitms = drop_items(val.drop, ply.pinfo.carr, ply.pinfo.kmgldper);
+                foreach (itm in exitms.itm)
+                {
+                    itms.itm.push(itm);
+                }
+                foreach (eqp in exitms.eqp)
+                {
+                    itms.eqp.push(eqp);
+                }
+
+                itms.gld += exitms.gld;
+                itms.bndyb += exitms.bndyb;
             }
-            foreach (eqp in exitms.eqp)
+        }
+
+        // 产生额外掉落道具
+        if (extra_roll_itms != null)
+        {
+            foreach (eqp in extra_roll_itms.eqp)
             {
                 itms.eqp.push(eqp);
             }
-
-            itms.gld += exitms.gld;
-            itms.bndyb += exitms.bndyb;
+            foreach (itm in extra_roll_itms.itm)
+            {
+                itms.itm.push(itm);
+            }
         }
-    }
 
-    // 产生额外掉落道具
-    if (extra_roll_itms != null)
-    {
-        foreach (eqp in extra_roll_itms.eqp)
+        // 产生额外掉落道具
+        if (extra_itms != null)
         {
-            itms.eqp.push(eqp);
+            foreach (eqp in extra_itms.eqp)
+            {
+                itms.eqp.push(eqp);
+            }
+            foreach (itm in extra_itms.itm)
+            {
+                itms.itm.push(itm);
+            }
         }
-        foreach (itm in extra_roll_itms.itm)
+
+        // 有一定品质道具
+        var tid = team.get_ply_teamid(ply.pinfo.cid);
+        if (tid > 0)
         {
-            itms.itm.push(itm);
+            //::Utility.debug( " ===>> team drop! " );
+            this.push_team_drop_itm(tid, itms, position, ply, kmtp, allpick);
+            return;
         }
-    }
 
-    // 产生额外掉落道具
-    if (extra_itms != null)
-    {
-        foreach (eqp in extra_itms.eqp)
+        // 检查是否达到可拥有上限
+        for (var idx = 0; idx < itms.itm.Count; ++idx)
         {
-            itms.eqp.push(eqp);
+            var dpeditm = itms.itm[idx];
+
+            var item_conf = get_item_conf(dpeditm.id);
+            if (!item_conf)
+            {
+                itms.itm.remove(idx);
+                --idx;
+                continue;
+            }
+
+            if (!("count" in item_conf.conf) || item_conf.conf.count == 0)
+            {
+            continue;
         }
-        foreach (itm in extra_itms.itm)
+
+        var total_cnt = ply.get_item_total_count(item_conf.conf.id);
+        total_cnt += this.get_owner_dpitm_cnt(ply, item_conf.conf.id, false);
+        var cnt = item_conf.conf.count - total_cnt;
+        if (cnt <= 0)
         {
-            itms.itm.push(itm);
-        }
-    }
-
-    // 有一定品质道具
-    var tid = team.get_ply_teamid(ply.pinfo.cid);
-    if (tid > 0)
-    {
-        //::Utility.debug( " ===>> team drop! " );
-        this.push_team_drop_itm(tid, itms, position, ply, kmtp, allpick);
-        return;
-    }
-
-    // 检查是否达到可拥有上限
-    for (var idx = 0; idx < itms.itm.Count; ++idx)
-    {
-        var dpeditm = itms.itm[idx];
-
-        var item_conf = get_item_conf(dpeditm.id);
-        if (!item_conf)
-        {
+            // 已达拥有上限
             itms.itm.remove(idx);
             --idx;
             continue;
         }
 
-        if (!("count" in item_conf.conf) || item_conf.conf.count == 0)
-            {
-        continue;
-    }
-
-    var total_cnt = ply.get_item_total_count(item_conf.conf.id);
-    total_cnt += this.get_owner_dpitm_cnt(ply, item_conf.conf.id, false);
-    var cnt = item_conf.conf.count - total_cnt;
-    if (cnt <= 0)
-    {
-        // 已达拥有上限
-        itms.itm.remove(idx);
-        --idx;
-        continue;
-    }
-
-    if (dpeditm.cnt > cnt)
-    {
-        dpeditm.cnt = cnt;
-    }
-
-
-    for (var idx = 0; idx < itms.eqp.Count; ++idx)
-    {
-        var dpeditm = itms.eqp[idx];
-
-        var item_conf = get_item_conf(dpeditm.id);
-        if (!item_conf)
+        if (dpeditm.cnt > cnt)
         {
+            dpeditm.cnt = cnt;
+        }
+
+
+        for (var idx = 0; idx < itms.eqp.Count; ++idx)
+        {
+            var dpeditm = itms.eqp[idx];
+
+            var item_conf = get_item_conf(dpeditm.id);
+            if (!item_conf)
+            {
+                itms.eqp.remove(idx);
+                --idx;
+                continue;
+            }
+
+            if (!("count" in item_conf.conf) || item_conf.conf.count == 0)
+            {
+            continue;
+        }
+
+        var total_cnt = ply.get_item_total_count(item_conf.conf.id);
+        total_cnt += this.get_owner_dpitm_cnt(ply, item_conf.conf.id, true);
+        var cnt = item_conf.conf.count - total_cnt;
+        if (cnt <= 0)
+        {
+            // 已达拥有上限
             itms.eqp.remove(idx);
             --idx;
             continue;
         }
 
-        if (!("count" in item_conf.conf) || item_conf.conf.count == 0)
-            {
-        continue;
+
+        //::g_dump( "direct_push_drop_itm, itms:", itms );
+
+        this.direct_push_drop_itm(ply, itms, position, kmtp, null, allpick);
     }
 
-    var total_cnt = ply.get_item_total_count(item_conf.conf.id);
-    total_cnt += this.get_owner_dpitm_cnt(ply, item_conf.conf.id, true);
-    var cnt = item_conf.conf.count - total_cnt;
-    if (cnt <= 0)
+    public void direct_push_drop_itm(ply, itms, position, kmtp, tarnm= null, allpick= false)
     {
-        // 已达拥有上限
-        itms.eqp.remove(idx);
-        --idx;
-        continue;
-    }
-
-
-    //::g_dump( "direct_push_drop_itm, itms:", itms );
-
-    this.direct_push_drop_itm(ply, itms, position, kmtp, null, allpick);
-}
-
-public void direct_push_drop_itm(ply, itms, position, kmtp, tarnm= null, allpick= false)
-{
-    var drop_itm = null;
-    if (itms.gld > 0)
-    {
-        drop_itm = { tp = dpitm_owner_type.DOT_ALL, gold = itms.gld };
-        this._direct_push_drop_itm(drop_itm, position);
-    }
-
-    if (itms.itm.Count > 0)
-    {
-        foreach (itm in itms.itm)
+        var drop_itm = null;
+        if (itms.gld > 0)
         {
-            drop_itm = { tp = dpitm_owner_type.DOT_ONE, owner = ply.pinfo.cid, itm = _generate_drop_itm_data(itm) };
-            if (allpick)
-            {
-                drop_itm.tp = dpitm_owner_type.DOT_ALL;
-            }
+            drop_itm = { tp = dpitm_owner_type.DOT_ALL, gold = itms.gld };
             this._direct_push_drop_itm(drop_itm, position);
-
-            broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, itm, tarnm, 0, "itm");
-
-            /*
-            var item_conf = get_item_conf(itm.id);           
-            if("broadcast" in item_conf.conf && item_conf.conf["broadcast"] == 1)
-            {
-                // 广播获得道具消息
-                var msg = {cid=ply.pinfo.cid, name=ply.pinfo.name, tp=bcast_msg_tp.KILL_MON_GAIN_ITM, kmtp=kmtp, itm=itm};
-                if( tarnm )
-                {
-                    msg.tarnm <- tarnm;
-                }                  
-                if ( this.blvlmap )
-                {
-                    msg.par1 <- this.worldsvr.ltpid;
-                }
-                else
-                {
-                    msg.par <- this.mapid;
-                }
-                _broad_cast_sys_msg(msg); // bcast_msg_tp.KILL_MON_GAIN_ITM
-            }
-            */
         }
-    }
-    if (itms.eqp.Count > 0)
-    {
-        foreach (eqp in itms.eqp)
-        {
-            drop_itm = { tp = dpitm_owner_type.DOT_ONE, owner = ply.pinfo.cid, eqp = _generate_drop_eqp_data(eqp) };
-            if (allpick)
-            {
-                drop_itm.tp = dpitm_owner_type.DOT_ALL;
-            }
-            this._direct_push_drop_itm(drop_itm, position);
 
-            //带卓越属性的 装备 才需要广播
-            if (drop_itm.eqp.exatt)
+        if (itms.itm.Count > 0)
+        {
+            foreach (itm in itms.itm)
             {
-                broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, eqp, tarnm, 0, "eqp");
+                drop_itm = { tp = dpitm_owner_type.DOT_ONE, owner = ply.pinfo.cid, itm = _generate_drop_itm_data(itm) };
+                if (allpick)
+                {
+                    drop_itm.tp = dpitm_owner_type.DOT_ALL;
+                }
+                this._direct_push_drop_itm(drop_itm, position);
+
+                broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, itm, tarnm, 0, "itm");
+
                 /*
-                var item_conf = get_equip_conf( eqp.id );
-                if("broadcast" in item_conf && item_conf["broadcast"] == 1)
+                var item_conf = get_item_conf(itm.id);           
+                if("broadcast" in item_conf.conf && item_conf.conf["broadcast"] == 1)
                 {
                     // 广播获得道具消息
-                    var msg = {cid=ply.pinfo.cid, name=ply.pinfo.name, tp=bcast_msg_tp.KILL_MON_GAIN_ITM, kmtp=kmtp, itm=drop_itm.eqp };
-                    if(tarnm)
+                    var msg = {cid=ply.pinfo.cid, name=ply.pinfo.name, tp=bcast_msg_tp.KILL_MON_GAIN_ITM, kmtp=kmtp, itm=itm};
+                    if( tarnm )
                     {
                         msg.tarnm <- tarnm;
-                    }
+                    }                  
                     if ( this.blvlmap )
                     {
                         msg.par1 <- this.worldsvr.ltpid;
@@ -5666,13 +5183,51 @@ public void direct_push_drop_itm(ply, itms, position, kmtp, tarnm= null, allpick
                 */
             }
         }
-    }
-}
+        if (itms.eqp.Count > 0)
+        {
+            foreach (eqp in itms.eqp)
+            {
+                drop_itm = { tp = dpitm_owner_type.DOT_ONE, owner = ply.pinfo.cid, eqp = _generate_drop_eqp_data(eqp) };
+                if (allpick)
+                {
+                    drop_itm.tp = dpitm_owner_type.DOT_ALL;
+                }
+                this._direct_push_drop_itm(drop_itm, position);
 
-// key [itm, eqp]
-public void broad_cast_on_drop(cid, name, kmtp, itm, tarnm, teamid, key )
-{
-    var keyfun = {
+                //带卓越属性的 装备 才需要广播
+                if (drop_itm.eqp.exatt)
+                {
+                    broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, eqp, tarnm, 0, "eqp");
+                    /*
+                    var item_conf = get_equip_conf( eqp.id );
+                    if("broadcast" in item_conf && item_conf["broadcast"] == 1)
+                    {
+                        // 广播获得道具消息
+                        var msg = {cid=ply.pinfo.cid, name=ply.pinfo.name, tp=bcast_msg_tp.KILL_MON_GAIN_ITM, kmtp=kmtp, itm=drop_itm.eqp };
+                        if(tarnm)
+                        {
+                            msg.tarnm <- tarnm;
+                        }
+                        if ( this.blvlmap )
+                        {
+                            msg.par1 <- this.worldsvr.ltpid;
+                        }
+                        else
+                        {
+                            msg.par <- this.mapid;
+                        }
+                        _broad_cast_sys_msg(msg); // bcast_msg_tp.KILL_MON_GAIN_ITM
+                    }
+                    */
+                }
+            }
+        }
+    }
+
+    // key [itm, eqp]
+    public void broad_cast_on_drop(cid, name, kmtp, itm, tarnm, teamid, key )
+    {
+        var keyfun = {
             itm = {
                 conf_fun = get_item_conf,
                 form_data = _generate_drop_itm_data,
@@ -5685,30 +5240,31 @@ public void broad_cast_on_drop(cid, name, kmtp, itm, tarnm, teamid, key )
 
 
 
+
         var funinfo = keyfun[key];
 
-    //::g_dump( " ===>> broad_cast_on_drop itm: ", itm );
-    var item_conf = funinfo.conf_fun(itm.id);
+        //::g_dump( " ===>> broad_cast_on_drop itm: ", itm );
+        var item_conf = funinfo.conf_fun(itm.id);
 
-    //::g_dump( " ===>> broad_cast_on_drop conf: ", item_conf );
+        //::g_dump( " ===>> broad_cast_on_drop conf: ", item_conf );
 
 
-    if (!item_conf)
-    {
-        //::g_dump( " ===>> 没有物品配置: ", itm );
-        return;
-    }
+        if (!item_conf)
+        {
+            //::g_dump( " ===>> 没有物品配置: ", itm );
+            return;
+        }
 
-    if (key == "itm")
-    {
-        item_conf = item_conf.conf;
-    }
+        if (key == "itm")
+        {
+            item_conf = item_conf.conf;
+        }
 
-    if (!("broadcast" in item_conf) ||
-        item_conf["broadcast"] != 1 )      return;
+        if (!("broadcast" in item_conf) ||
+            item_conf["broadcast"] != 1 )      return;
 
-    // 广播获得道具消息
-    var msg = {
+        // 广播获得道具消息
+        var msg = {
             cid = cid,
             //teamid = teamid, 
             name = name,
@@ -5716,859 +5272,796 @@ public void broad_cast_on_drop(cid, name, kmtp, itm, tarnm, teamid, key )
             kmtp = kmtp,
             itm = funinfo.form_data( itm ) ,
         };
-    if (tarnm)
-    {
-        msg.tarnm < -tarnm;
-    }
-    if (this.blvlmap)
-    {
-        msg.par1 < -this.worldsvr.ltpid;
-    }
-    else
-    {
-        msg.par < -this.mapid;
-    }
-    _broad_cast_sys_msg(msg); // bcast_msg_tp.KILL_MON_GAIN_ITM
-}
-
-
-
-public void _generate_drop_eqp_data(eqp )
-{
-    var ret = { conf = eqp, id = eqp.id, exatt = false, add_att = false };
-    if (("ex_att_grp" in eqp ) || (("exatt" in eqp) && eqp.exatt != 0) || (("veriex_cnt" in eqp)&& eqp.veriex_cnt > 0) )
+        if (tarnm)
         {
-        ret.exatt = true;
-    }
-    if (("add_att_grp" in eqp ) || (("fp" in eqp) && eqp.fp != 0) )
-        {
-        ret.add_att = true;
-    }
-    if (("flvl" in eqp) && eqp.flvl != 0 )
-        {
-        ret.flvl < -eqp.flvl;
-    }
-    if (("flag" in eqp) && eqp.flag != 0 )
-        {
-        ret.flag < -eqp.flag;
-    }
-    if ((("rare_att" in eqp) && eqp.rare_att ) || (("rare_att_grp" in eqp) && eqp.rare_att_grp ) )
-        {
-        ret.rare_show < -true;
-    }
-    return ret;
-}
-
-public void _generate_drop_itm_data(itm )
-{
-    var ret = { conf = itm, id = itm.id };
-    if (("cnt" in itm) && itm.cnt > 1 )
-        {
-        ret.cnt < -itm.cnt;
-    }
-    return ret;
-}
-
-
-public void _direct_push_drop_itm(drop_item, position )
-{
-    var dpid = map_dpidseed;
-
-    ++map_dpidseed;
-    if (map_dpidseed > 0x3ff)//1023
-    {
-        map_dpidseed = 1;
-    }
-
-    // 记录掉落物品
-    var cur_tm = sys.time();
-    //随机位置
-    drop_item.x < -(position.x / game_const.map_grid_pixel);
-    drop_item.y < -(position.y / game_const.map_grid_pixel);
-    //sys.trace( sys.SLT_DETAIL, "drop_item.x = " + drop_item.x + "drop_item.y = " + drop_item.y + "\n");
-    var rand_cnt = 9;
-    while (rand_cnt > 0)
-    {
-        var rand_x = Utility.random(-1, 2);
-        var rand_y = Utility.random(-1, 2);
-        if (is_grid_walkableEx(drop_item.x + rand_x, drop_item.y + rand_y))
-        {
-            drop_item.x += rand_x;
-            drop_item.y += rand_y;
-            break;
+            msg.tarnm < -tarnm;
         }
-        --rand_cnt;
-    }
-
-    drop_item.dpid < -dpid;
-    drop_item.left_tm < -100;
-    if ("gold" in  drop_item )
+        if (this.blvlmap)
         {
-        drop_item.left_tm < -30;
-        drop_item.dis_tm < -cur_tm + 30;//消失时候
-    }
+            msg.par1 < -this.worldsvr.ltpid;
+        }
         else
         {
-        drop_item.left_tm < -90;
-        drop_item.dis_tm < -cur_tm + 90;//消失时候
-    }
-    drop_item.lose_tm < -cur_tm + 30;//失去拥有权时候
-                                     //sys.dumpobj( drop_item );        
-
-    this.map_dpitms.push(drop_item);
-    if (this.map_dpitms.Count > 0x3ff)
-    {
-        this.map_dpitms = this.map_dpitms.slice(this.map_dpitms.Count - 0x3ff);
+            msg.par < -this.mapid;
+        }
+        _broad_cast_sys_msg(msg); // bcast_msg_tp.KILL_MON_GAIN_ITM
     }
 
-    // broadcast item drop msg
-    this.broadcast_map_rpc(76, drop_item);
-}
 
-public void push_team_drop_itm(teamid, itms, position, ply, kmtp, allpick= false)
-{
-    var drop_itm = null;
-    if (itms.gld > 0)
+
+    public void _generate_drop_eqp_data(eqp )
     {
-        drop_itm = { tp = dpitm_owner_type.DOT_ALL, gold = itms.gld };
-        this._direct_push_drop_itm(drop_itm, position);
-    }
-
-    //var leader_cid = team.get_leader_cid( teamid ); //广播使用
-
-    if (itms.itm.Count > 0)
-    {
-        foreach (itm in itms.itm)
+        var ret = { conf = eqp, id = eqp.id, exatt = false, add_att = false };
+        if (("ex_att_grp" in eqp ) || (("exatt" in eqp) && eqp.exatt != 0) || (("veriex_cnt" in eqp)&& eqp.veriex_cnt > 0) )
         {
-            drop_itm = { tp = dpitm_owner_type.DOT_TEAM, owner = teamid, itm = _generate_drop_itm_data(itm) };
-            if (allpick)
+            ret.exatt = true;
+        }
+        if (("add_att_grp" in eqp ) || (("fp" in eqp) && eqp.fp != 0) )
+        {
+            ret.add_att = true;
+        }
+        if (("flvl" in eqp) && eqp.flvl != 0 )
+        {
+            ret.flvl < -eqp.flvl;
+        }
+        if (("flag" in eqp) && eqp.flag != 0 )
+        {
+            ret.flag < -eqp.flag;
+        }
+        if ((("rare_att" in eqp) && eqp.rare_att ) || (("rare_att_grp" in eqp) && eqp.rare_att_grp ) )
+        {
+            ret.rare_show < -true;
+        }
+        return ret;
+    }
+
+    public void _generate_drop_itm_data(itm )
+    {
+        var ret = { conf = itm, id = itm.id };
+        if (("cnt" in itm) && itm.cnt > 1 )
+        {
+            ret.cnt < -itm.cnt;
+        }
+        return ret;
+    }
+
+
+    public void _direct_push_drop_itm(drop_item, position )
+    {
+        var dpid = map_dpidseed;
+
+        ++map_dpidseed;
+        if (map_dpidseed > 0x3ff)//1023
+        {
+            map_dpidseed = 1;
+        }
+
+        // 记录掉落物品
+        var cur_tm = sys.time();
+        //随机位置
+        drop_item.x < -(position.x / game_const.map_grid_pixel);
+        drop_item.y < -(position.y / game_const.map_grid_pixel);
+        //sys.trace( sys.SLT_DETAIL, "drop_item.x = " + drop_item.x + "drop_item.y = " + drop_item.y + "\n");
+        var rand_cnt = 9;
+        while (rand_cnt > 0)
+        {
+            var rand_x = Utility.random(-1, 2);
+            var rand_y = Utility.random(-1, 2);
+            if (is_grid_walkableEx(drop_item.x + rand_x, drop_item.y + rand_y))
             {
-                drop_itm.tp = dpitm_owner_type.DOT_ALL;
+                drop_item.x += rand_x;
+                drop_item.y += rand_y;
+                break;
             }
+            --rand_cnt;
+        }
+
+        drop_item.dpid < -dpid;
+        drop_item.left_tm < -100;
+        if ("gold" in  drop_item )
+        {
+            drop_item.left_tm < -30;
+            drop_item.dis_tm < -cur_tm + 30;//消失时候
+        }
+        else
+        {
+            drop_item.left_tm < -90;
+            drop_item.dis_tm < -cur_tm + 90;//消失时候
+        }
+        drop_item.lose_tm < -cur_tm + 30;//失去拥有权时候
+                                         //sys.dumpobj( drop_item );        
+
+        this.map_dpitms.push(drop_item);
+        if (this.map_dpitms.Count > 0x3ff)
+        {
+            this.map_dpitms = this.map_dpitms.slice(this.map_dpitms.Count - 0x3ff);
+        }
+
+        // broadcast item drop msg
+        this.broadcast_map_rpc(76, drop_item);
+    }
+
+    public void push_team_drop_itm(teamid, itms, position, ply, kmtp, allpick= false)
+    {
+        var drop_itm = null;
+        if (itms.gld > 0)
+        {
+            drop_itm = { tp = dpitm_owner_type.DOT_ALL, gold = itms.gld };
             this._direct_push_drop_itm(drop_itm, position);
-            broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, itm, null, teamid, "itm");
+        }
+
+        //var leader_cid = team.get_leader_cid( teamid ); //广播使用
+
+        if (itms.itm.Count > 0)
+        {
+            foreach (itm in itms.itm)
+            {
+                drop_itm = { tp = dpitm_owner_type.DOT_TEAM, owner = teamid, itm = _generate_drop_itm_data(itm) };
+                if (allpick)
+                {
+                    drop_itm.tp = dpitm_owner_type.DOT_ALL;
+                }
+                this._direct_push_drop_itm(drop_itm, position);
+                broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, itm, null, teamid, "itm");
+            }
+        }
+        if (itms.eqp.Count > 0)
+        {
+            foreach (eqp in itms.eqp)
+            {
+                drop_itm = { tp = dpitm_owner_type.DOT_TEAM, owner = teamid, eqp = _generate_drop_eqp_data(eqp) };
+                if (allpick)
+                {
+                    drop_itm.tp = dpitm_owner_type.DOT_ALL;
+                }
+                this._direct_push_drop_itm(drop_itm, position);
+                //带卓越属性的 装备 才需要广播
+                if (drop_itm.eqp.exatt)
+                {
+                    broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, eqp, null, teamid, "eqp");
+                }
+            }
         }
     }
-    if (itms.eqp.Count > 0)
+
+    public void get_dpitm(dpitm_id, cur_tm_s )
     {
-        foreach (eqp in itms.eqp)
+        var ret = null;
+        foreach (idx, drop_item in this.map_dpitms )
         {
-            drop_itm = { tp = dpitm_owner_type.DOT_TEAM, owner = teamid, eqp = _generate_drop_eqp_data(eqp) };
-            if (allpick)
+            if (drop_item.dpid == dpitm_id)
             {
-                drop_itm.tp = dpitm_owner_type.DOT_ALL;
-            }
-            this._direct_push_drop_itm(drop_itm, position);
-            //带卓越属性的 装备 才需要广播
-            if (drop_itm.eqp.exatt)
-            {
-                broad_cast_on_drop(ply.pinfo.cid, ply.pinfo.name, kmtp, eqp, null, teamid, "eqp");
+                if (drop_item.dis_tm <= cur_tm_s)
+                {
+                    this.map_dpitms.remove(idx);
+                }
+                else
+                {
+                    ret = drop_item;
+                }
+                break;
             }
         }
+        return ret;
     }
-}
 
-public void get_dpitm(dpitm_id, cur_tm_s )
-{
-    var ret = null;
-    foreach (idx, drop_item in this.map_dpitms )
+    //public void get_dpitm_cnt( itm_tp_id, is_eqp )
+    //{
+    //    var cnt = 0;
+    //    foreach( drop_item in this.map_dpitms )
+    //    {
+    //        if( is_eqp )
+    //        {
+    //            if( "eqp" in drop_item )
+    //            {
+    //                if ( drop_item.eqp.id == itm_tp_id )  ++cnt;              
+    //            }
+    //        }
+    //        else
+    //        {
+    //            if( "itm" in drop_item )
+    //            {
+    //                if ( drop_item.itm.id == itm_tp_id ) cnt += drop_item.itm.cnt;
+    //            }
+    //        }
+    //    }
+    //    //Utility.trace_info("cnt : " + cnt + "\n");
+    //    return cnt;
+    //}
+
+    public void get_owner_dpitm_cnt(ply, itm_tp_id, is_eqp )
+    {
+        var cnt = 0;
+        var tid = team.get_ply_teamid(ply.pinfo.cid);
+        if (is_eqp)
         {
-        if (drop_item.dpid == dpitm_id)
+            foreach (drop_item in this.map_dpitms)
+            {
+                if ("eqp" in drop_item && drop_item.eqp.id == itm_tp_id )
+                {
+                    switch (drop_item.tp)
+                    {
+                        case dpitm_owner_type.DOT_ONE:
+                            if (drop_item.owner == ply.pinfo.cid)
+                            {
+                                ++cnt;
+                            }
+                            break;
+                        case dpitm_owner_type.DOT_TEAM:
+                            if (tid > 0 && drop_item.owner == tid)
+                            {
+                                ++cnt;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        else
         {
-            if (drop_item.dis_tm <= cur_tm_s)
+            foreach (drop_item in this.map_dpitms)
+            {
+                if ("itm" in drop_item && drop_item.itm.id == itm_tp_id )
+                {
+                    switch (drop_item.tp)
+                    {
+                        case dpitm_owner_type.DOT_ONE:
+                            if (drop_item.owner == ply.pinfo.cid)
+                            {
+                                ++cnt;
+                            }
+                            break;
+                        case dpitm_owner_type.DOT_TEAM:
+                            if (tid > 0 && drop_item.owner == tid)
+                            {
+                                ++cnt;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        //Utility.trace_info("cnt : " + cnt + "\n");
+        return cnt;
+    }
+
+    public void rmv_dpitm(dpitm_id )
+    {
+        foreach (idx, drop_item in this.map_dpitms )
+        {
+            if (drop_item.dpid == dpitm_id)
             {
                 this.map_dpitms.remove(idx);
+                break;
+            }
+        }
+    }
+
+    public void _update_dpitm(cur_tm_s)
+    {
+        var to_del_dpitm = [];
+        var i = 0;
+        var drop_item = null;
+        for (; i < this.map_dpitms.Count; ++i)
+        {
+            drop_item = this.map_dpitms[i];
+            if (drop_item.dis_tm > cur_tm_s)
+            {
+                break;
+            }
+        }
+
+        if (i > 0)
+        {
+            if (i == this.map_dpitms.Count)
+            {
+                this.map_dpitms = [];
             }
             else
             {
-                ret = drop_item;
-            }
-            break;
-        }
-    }
-    return ret;
-}
-
-//public void get_dpitm_cnt( itm_tp_id, is_eqp )
-//{
-//    var cnt = 0;
-//    foreach( drop_item in this.map_dpitms )
-//    {
-//        if( is_eqp )
-//        {
-//            if( "eqp" in drop_item )
-//            {
-//                if ( drop_item.eqp.id == itm_tp_id )  ++cnt;              
-//            }
-//        }
-//        else
-//        {
-//            if( "itm" in drop_item )
-//            {
-//                if ( drop_item.itm.id == itm_tp_id ) cnt += drop_item.itm.cnt;
-//            }
-//        }
-//    }
-//    //Utility.trace_info("cnt : " + cnt + "\n");
-//    return cnt;
-//}
-
-public void get_owner_dpitm_cnt(ply, itm_tp_id, is_eqp )
-{
-    var cnt = 0;
-    var tid = team.get_ply_teamid(ply.pinfo.cid);
-    if (is_eqp)
-    {
-        foreach (drop_item in this.map_dpitms)
-        {
-            if ("eqp" in drop_item && drop_item.eqp.id == itm_tp_id )
-                {
-                switch (drop_item.tp)
-                {
-                    case dpitm_owner_type.DOT_ONE:
-                        if (drop_item.owner == ply.pinfo.cid)
-                        {
-                            ++cnt;
-                        }
-                        break;
-                    case dpitm_owner_type.DOT_TEAM:
-                        if (tid > 0 && drop_item.owner == tid)
-                        {
-                            ++cnt;
-                        }
-                        break;
-                }
+                this.map_dpitms = this.map_dpitms.slice(i);
             }
         }
-    }
-    else
-    {
-        foreach (drop_item in this.map_dpitms)
-        {
-            if ("itm" in drop_item && drop_item.itm.id == itm_tp_id )
-                {
-                switch (drop_item.tp)
-                {
-                    case dpitm_owner_type.DOT_ONE:
-                        if (drop_item.owner == ply.pinfo.cid)
-                        {
-                            ++cnt;
-                        }
-                        break;
-                    case dpitm_owner_type.DOT_TEAM:
-                        if (tid > 0 && drop_item.owner == tid)
-                        {
-                            ++cnt;
-                        }
-                        break;
-                }
-            }
-        }
-    }
-    //Utility.trace_info("cnt : " + cnt + "\n");
-    return cnt;
-}
 
-public void rmv_dpitm(dpitm_id )
-{
-    foreach (idx, drop_item in this.map_dpitms )
-        {
-        if (drop_item.dpid == dpitm_id)
-        {
-            this.map_dpitms.remove(idx);
-            break;
-        }
-    }
-}
-
-public void _update_dpitm(cur_tm_s)
-{
-    var to_del_dpitm = [];
-    var i = 0;
-    var drop_item = null;
-    for (; i < this.map_dpitms.Count; ++i)
-    {
-        drop_item = this.map_dpitms[i];
-        if (drop_item.dis_tm > cur_tm_s)
-        {
-            break;
-        }
+        //for( i = 0; i < this.map_dpitms.Count; ++i )
+        //{
+        //    drop_item = this.map_dpitms[i];
+        //    if ( drop_item.tp != dpitm_owner_type.DOT_ALL && drop_item.lose_tm < cur_tm_s )
+        //    {
+        //        drop_item.tp = dpitm_owner_type.DOT_ALL;
+        //    }
+        //}
     }
 
-    if (i > 0)
-    {
-        if (i == this.map_dpitms.Count)
-        {
-            this.map_dpitms = [];
-        }
-        else
-        {
-            this.map_dpitms = this.map_dpitms.slice(i);
-        }
-    }
+    //--------------------------------------------------  掉落  end---------------------------------------------------------
 
-    //for( i = 0; i < this.map_dpitms.Count; ++i )
+    //public void push_team_drop_itm(itm, position, ply_rolls, kmtp)
     //{
-    //    drop_item = this.map_dpitms[i];
-    //    if ( drop_item.tp != dpitm_owner_type.DOT_ALL && drop_item.lose_tm < cur_tm_s )
+    //    var game_conf = get_general_game_conf();
+    //    var cur_tm_s = sys.time();
+
+    //    var drp_id = ++team_drop_itm_seed;
+    //    if(team_drop_itm_seed > 0xfffff ) team_drop_itm_seed = 1;
+
+    //    var team_drop = {id=drp_id, itm=itm, pos=position, ply_rolls=sys.deep_clone(ply_rolls), fintm=cur_tm_s+game_conf.team_pick_tm, kmtp=kmtp};
+
+    //    this.team_drop_itm[drp_id] <- team_drop;
+
+    //    return team_drop;
+    //}
+    //public void get_team_drop_itm(dpid)
+    //{
+    //    if(!(dpid in this.team_drop_itm))
     //    {
-    //        drop_item.tp = dpitm_owner_type.DOT_ALL;
+    //        return null;
+    //    }
+
+    //    return this.team_drop_itm[dpid];
+    //}
+    //public void _update_team_dpitm(cur_tm_s)
+    //{
+    //    var to_del_dpitm = [];
+    //    foreach(id, dpitm in this.team_drop_itm)
+    //    {
+    //        if(cur_tm_s < dpitm.fintm)
+    //        {
+    //            continue;
+    //        }
+
+    //        // 超时了
+
+    //        to_del_dpitm.push(dpitm);
+    //    }
+
+    //    foreach(dpitm in to_del_dpitm)
+    //    {
+    //        delete this.team_drop_itm[dpitm.id];
+    //        this._pick_team_dpitm(dpitm);
     //    }
     //}
-}
+    //public void _pick_team_dpitm(team_drop)
+    //{
+    //    var cur_tm_s = sys.time();
 
-//--------------------------------------------------  掉落  end---------------------------------------------------------
+    //    var allrolled = true;
+    //    var max_roll = 0;
+    //    var max_roll_ply = null;
+    //    this.temp_sid_ary.reset();
 
-//public void push_team_drop_itm(itm, position, ply_rolls, kmtp)
-//{
-//    var game_conf = get_general_game_conf();
-//    var cur_tm_s = sys.time();
+    //    foreach(cid, rollv in team_drop.ply_rolls)
+    //    {
+    //        var tar_ply = null;
+    //        if(this.is_player_in_map_bycid(cid))
+    //        {
+    //            tar_ply = this.map_players_bycid[cid];
+    //            this.temp_sid_ary.push(tar_ply.pinfo.sid);
+    //        }
+    //        else
+    //        {
+    //            continue; // 离开地图视为放弃
+    //        }
 
-//    var drp_id = ++team_drop_itm_seed;
-//    if(team_drop_itm_seed > 0xfffff ) team_drop_itm_seed = 1;
+    //        if(rollv > max_roll)
+    //        {
+    //            max_roll = rollv;
+    //            max_roll_ply = tar_ply;
+    //        }
+    //    }
 
-//    var team_drop = {id=drp_id, itm=itm, pos=position, ply_rolls=sys.deep_clone(ply_rolls), fintm=cur_tm_s+game_conf.team_pick_tm, kmtp=kmtp};
+    //    if(max_roll_ply)
+    //    {
+    //        // 检查目标道具是否可添加至角色
+    //        var add_itm = {itm=[], eqp=[], gld=0, bndyb=0};
+    //        if("flvl" in team_drop.itm)
+    //        {
+    //            add_itm.eqp.push(team_drop.itm);
+    //        }
+    //        else
+    //        {
+    //            add_itm.itm.push(team_drop.itm);
+    //        }
 
-//    this.team_drop_itm[drp_id] <- team_drop;
+    //        var res =_check_add_item_to_pl(add_itm, max_roll_ply);
 
-//    return team_drop;
-//}
-//public void get_team_drop_itm(dpid)
-//{
-//    if(!(dpid in this.team_drop_itm))
-//    {
-//        return null;
-//    }
+    //        if(res == game_err_code.RES_OK)
+    //        {
+    //            // 添加道具至角色
+    //            var new_add_itm_ary = _add_item_to_pl(add_itm, max_roll_ply);
 
-//    return this.team_drop_itm[dpid];
-//}
-//public void _update_team_dpitm(cur_tm_s)
-//{
-//    var to_del_dpitm = [];
-//    foreach(id, dpitm in this.team_drop_itm)
-//    {
-//        if(cur_tm_s < dpitm.fintm)
-//        {
-//            continue;
-//        }
+    //            max_roll_ply.flush_db_data(false, false); // 同步数据至管理器
 
-//        // 超时了
+    //            var item_conf = get_item_conf(team_drop.itm.id);
+    //            if("broadcast" in item_conf.conf && item_conf.conf["broadcast"] == 1)
+    //            {
+    //                // 广播获得道具消息
+    //                _broad_cast_sys_msg({cid=max_roll_ply.pinfo.cid, name=max_roll_ply.pinfo.name, tp=1, kmtp=team_drop.kmtp, itm=team_drop.itm}); // bcast_msg_tp.KILL_MON_GAIN_ITM
+    //            }
 
-//        to_del_dpitm.push(dpitm);
-//    }
+    //            // log itm
+    //            if(new_add_itm_ary.Count > 0)
+    //            {
+    //                _log_itm_log(max_roll_ply, cur_tm_s, itm_act_type.IAT_GET_DP_ITEM, itm_flag_type.IFT_NEW_ADD, 0, new_add_itm_ary, []);
+    //            }
+    //        }
+    //        else
+    //        {
+    //            // 不能添加至角色，增加掉落道具
+    //            max_roll_ply.direct_push_drop_itm(add_itm, team_drop.pos, team_drop.kmtp);
 
-//    foreach(dpitm in to_del_dpitm)
-//    {
-//        delete this.team_drop_itm[dpitm.id];
-//        this._pick_team_dpitm(dpitm);
-//    }
-//}
-//public void _pick_team_dpitm(team_drop)
-//{
-//    var cur_tm_s = sys.time();
+    //            ::send_rpc(max_roll_ply.pinfo.sid, 252, {res=res});
+    //        }
 
-//    var allrolled = true;
-//    var max_roll = 0;
-//    var max_roll_ply = null;
-//    this.temp_sid_ary.reset();
-
-//    foreach(cid, rollv in team_drop.ply_rolls)
-//    {
-//        var tar_ply = null;
-//        if(this.is_player_in_map_bycid(cid))
-//        {
-//            tar_ply = this.map_players_bycid[cid];
-//            this.temp_sid_ary.push(tar_ply.pinfo.sid);
-//        }
-//        else
-//        {
-//            continue; // 离开地图视为放弃
-//        }
-
-//        if(rollv > max_roll)
-//        {
-//            max_roll = rollv;
-//            max_roll_ply = tar_ply;
-//        }
-//    }
-
-//    if(max_roll_ply)
-//    {
-//        // 检查目标道具是否可添加至角色
-//        var add_itm = {itm=[], eqp=[], gld=0, bndyb=0};
-//        if("flvl" in team_drop.itm)
-//        {
-//            add_itm.eqp.push(team_drop.itm);
-//        }
-//        else
-//        {
-//            add_itm.itm.push(team_drop.itm);
-//        }
-
-//        var res =_check_add_item_to_pl(add_itm, max_roll_ply);
-
-//        if(res == game_err_code.RES_OK)
-//        {
-//            // 添加道具至角色
-//            var new_add_itm_ary = _add_item_to_pl(add_itm, max_roll_ply);
-
-//            max_roll_ply.flush_db_data(false, false); // 同步数据至管理器
-
-//            var item_conf = get_item_conf(team_drop.itm.id);
-//            if("broadcast" in item_conf.conf && item_conf.conf["broadcast"] == 1)
-//            {
-//                // 广播获得道具消息
-//                _broad_cast_sys_msg({cid=max_roll_ply.pinfo.cid, name=max_roll_ply.pinfo.name, tp=1, kmtp=team_drop.kmtp, itm=team_drop.itm}); // bcast_msg_tp.KILL_MON_GAIN_ITM
-//            }
-
-//            // log itm
-//            if(new_add_itm_ary.Count > 0)
-//            {
-//                _log_itm_log(max_roll_ply, cur_tm_s, itm_act_type.IAT_GET_DP_ITEM, itm_flag_type.IFT_NEW_ADD, 0, new_add_itm_ary, []);
-//            }
-//        }
-//        else
-//        {
-//            // 不能添加至角色，增加掉落道具
-//            max_roll_ply.direct_push_drop_itm(add_itm, team_drop.pos, team_drop.kmtp);
-
-//            ::send_rpc(max_roll_ply.pinfo.sid, 252, {res=res});
-//        }
-
-//        // send team_pick_dpitm msg
-//        svr.mul_snd_rpc(this.temp_sid_ary.data(), this.temp_sid_ary.size(), 139, {tpid=team_drop.itm.id, cid=max_roll_ply.pinfo.cid, name=max_roll_ply.pinfo.name, rollv=max_roll});
-//    }
-//}
+    //        // send team_pick_dpitm msg
+    //        svr.mul_snd_rpc(this.temp_sid_ary.data(), this.temp_sid_ary.size(), 139, {tpid=team_drop.itm.id, cid=max_roll_ply.pinfo.cid, name=max_roll_ply.pinfo.name, rollv=max_roll});
+    //    }
+    //}
 
 
 
-public void collect_itm(game_ref, atker, rpc)
-{
-    // 中断打坐
-    //atker.try_stop_recover();
+    public void collect_itm(game_ref, atker, rpc)
+    {
+        // 中断打坐
+        //atker.try_stop_recover();
 
-    var tar_iid = rpc.to_iid;
-    if (!(tar_iid in this.map_sprites))
+        var tar_iid = rpc.to_iid;
+        if (!(tar_iid in this.map_sprites))
         {
             ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.COLLECT_TARGET_NOT_EXIST})
             return;
-    }
+        }
 
-    var tar_spr = this.map_sprites[tar_iid];
-    var tar_pl = tar_spr.get_pack_data();
+        var tar_spr = this.map_sprites[tar_iid];
+        var tar_pl = tar_spr.get_pack_data();
 
-    if (tar_spr.get_sprite_type() != map_sprite_type.MstMonster || tar_spr.collect_tar <= 0)
-    {
+        if (tar_spr.get_sprite_type() != map_sprite_type.MstMonster || tar_spr.collect_tar <= 0)
+        {
             ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.NOT_COLLECT_TARGET})
             return;
-    }
+        }
 
-    if (tar_spr.isdie())
-    {
+        if (tar_spr.isdie())
+        {
             ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.COLLECT_TARGET_DIE})
             return;
-    }
+        }
 
-    var pl = atker.get_pack_data();
+        var pl = atker.get_pack_data();
 
-    var dist_x = tar_pl.x - pl.x;
-    var dist_y = tar_pl.y - pl.y;
-    var game_conf = get_general_game_conf();
+        var dist_x = tar_pl.x - pl.x;
+        var dist_y = tar_pl.y - pl.y;
+        var game_conf = get_general_game_conf();
 
-    if (dist_x * dist_x + dist_y * dist_y > game_conf.collect_itm_rng * game_conf.collect_itm_rng)
-    {
+        if (dist_x * dist_x + dist_y * dist_y > game_conf.collect_itm_rng * game_conf.collect_itm_rng)
+        {
             // 不在范围内
             ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.COLLECT_TARGET_NOT_NEARBY})
             return;
-    }
+        }
 
-    tar_pl.hp = 0;
+        tar_pl.hp = 0;
 
-    tar_spr.die(atker);
+        tar_spr.die(atker);
 
-    // broad cast die msg
-    //sprite.gmap.broadcast_map_rpc(25, {iid=pl.iid});
-    tar_spr.broad_cast_zone_msg_and_self(25, { iid = tar_pl.iid, frm_iid = pl.iid});
+        // broad cast die msg
+        //sprite.gmap.broadcast_map_rpc(25, {iid=pl.iid});
+        tar_spr.broad_cast_zone_msg_and_self(25, { iid = tar_pl.iid, frm_iid = pl.iid});
 
-    if ("colitm" in tar_spr.monconf)
+        if ("colitm" in tar_spr.monconf)
         {
-        // 采集获得道具
-        var ply = atker;
-        var item_conf = get_item_conf(tar_spr.monconf.colitm);
-        if (item_conf)
-        {
-            var grid_left = ply.cha_info.item.maxi - (ply.pinfo.items.Count + ply.pinfo.ncitems.Count + ply.pinfo.eqpitems.Count);
-            if (grid_left > 0)
+            // 采集获得道具
+            var ply = atker;
+            var item_conf = get_item_conf(tar_spr.monconf.colitm);
+            if (item_conf)
             {
-                var ret = _pre_add_item(ply, item_conf, 1, grid_left, true);
-                if (ret.res == game_err_code.RES_OK)
+                var grid_left = ply.cha_info.item.maxi - (ply.pinfo.items.Count + ply.pinfo.ncitems.Count + ply.pinfo.eqpitems.Count);
+                if (grid_left > 0)
                 {
-                    var ret_msg = { };
-                    var new_items_ary = _add_item(ply, item_conf, ret);
+                    var ret = _pre_add_item(ply, item_conf, 1, grid_left, true);
+                    if (ret.res == game_err_code.RES_OK)
+                    {
+                        var ret_msg = { };
+                        var new_items_ary = _add_item(ply, item_conf, ret);
 
-                    if (new_items_ary.Count > 0)
-                    {
-                        ret_msg.add < -new_items_ary;
-                    }
-                    if (ret.mul_item_modcnt_ary.Count > 0)
-                    {
-                        ret_msg.modcnts < -ret.mul_item_modcnt_ary;
-                    }
-
-                    if (ret_msg.Count > 0)
-                    {
-                        ret_msg.flag < -item_change_msg_flag.ICMF_COL_ITEM; // 采集物品获得
-                            ::send_rpc(ply.pinfo.sid, 75, ret_msg);
-                    }
-
-                    // log itm
-                    var cur_tm_s = sys.time();
-                    if (new_items_ary.Count > 0)
-                    {
-                        _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLLECT_ITM, itm_flag_type.IFT_NEW_ADD, tar_pl.mid, new_items_ary, []);
-                    }
-                    if (ret.mul_item_modcnt_ary.Count > 0)
-                    {
-                        var mod_cnt_itms = [];
-                        foreach (itm_info in ret.mul_item_modcnt_ary)
+                        if (new_items_ary.Count > 0)
                         {
-                            mod_cnt_itms.push(itm_info.itm);
+                            ret_msg.add < -new_items_ary;
                         }
-                        _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLLECT_ITM, itm_flag_type.IFT_MODCNT, tar_pl.mid, mod_cnt_itms, ret.mul_item_modcnt_ary);
+                        if (ret.mul_item_modcnt_ary.Count > 0)
+                        {
+                            ret_msg.modcnts < -ret.mul_item_modcnt_ary;
+                        }
+
+                        if (ret_msg.Count > 0)
+                        {
+                            ret_msg.flag < -item_change_msg_flag.ICMF_COL_ITEM; // 采集物品获得
+                            ::send_rpc(ply.pinfo.sid, 75, ret_msg);
+                        }
+
+                        // log itm
+                        var cur_tm_s = sys.time();
+                        if (new_items_ary.Count > 0)
+                        {
+                            _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLLECT_ITM, itm_flag_type.IFT_NEW_ADD, tar_pl.mid, new_items_ary, []);
+                        }
+                        if (ret.mul_item_modcnt_ary.Count > 0)
+                        {
+                            var mod_cnt_itms = [];
+                            foreach (itm_info in ret.mul_item_modcnt_ary)
+                            {
+                                mod_cnt_itms.push(itm_info.itm);
+                            }
+                            _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLLECT_ITM, itm_flag_type.IFT_MODCNT, tar_pl.mid, mod_cnt_itms, ret.mul_item_modcnt_ary);
+                        }
                     }
                 }
             }
         }
     }
-}
 
-public void collect_area_itm(game_ref, ply, rpc)
-{
-    // 中断打坐
-    //ply.try_stop_recover();
-
-    var cur_tm_s = sys.time();
-    if (ply.last_colarea_tm + 1 > cur_tm_s)
+    public void collect_area_itm(game_ref, ply, rpc)
     {
+        // 中断打坐
+        //ply.try_stop_recover();
+
+        var cur_tm_s = sys.time();
+        if (ply.last_colarea_tm + 1 > cur_tm_s)
+        {
             ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.MAP_COLAREA_CD});
-        return;
-    }
-
-    if (!(this.mapid in game_data_conf.general.mapex))
-        {
-            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PARAMETER_ERR});
-        return;
-    }
-    var mapex_conf = game_data_conf.general.mapex[this.mapid];
-
-    if (!(rpc.area_id in mapex_conf.colarea))
-        {
-            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PARAMETER_ERR});
-        return;
-    }
-
-    var colarea_conf = mapex_conf.colarea[rpc.area_id];
-
-    if (ply.pinfo.x < (colarea_conf.x - 32) || ply.pinfo.x > (colarea_conf.x + colarea_conf.width + 32) ||
-        ply.pinfo.y < (colarea_conf.y - 32) || ply.pinfo.y > (colarea_conf.y + colarea_conf.height + 32))
-    {
-            // 不在区域中
-            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.MAP_NOT_IN_COLAREA});
-        return;
-    }
-
-    if ("itmid" in colarea_conf )
-        {
-        var item_conf = get_item_conf(colarea_conf.itmid);
-        if (!item_conf)
-        {
-                ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.CONFIG_ERR});
             return;
         }
 
-        // 判断是否任务采集道具
-        if (!("ignoremis" in colarea_conf) || (colarea_conf.ignoremis != 1))
+        if (!(this.mapid in game_data_conf.general.mapex))
+        {
+            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PARAMETER_ERR});
+            return;
+        }
+        var mapex_conf = game_data_conf.general.mapex[this.mapid];
+
+        if (!(rpc.area_id in mapex_conf.colarea))
+        {
+            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PARAMETER_ERR});
+            return;
+        }
+
+        var colarea_conf = mapex_conf.colarea[rpc.area_id];
+
+        if (ply.pinfo.x < (colarea_conf.x - 32) || ply.pinfo.x > (colarea_conf.x + colarea_conf.width + 32) ||
+            ply.pinfo.y < (colarea_conf.y - 32) || ply.pinfo.y > (colarea_conf.y + colarea_conf.height + 32))
+        {
+            // 不在区域中
+            ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.MAP_NOT_IN_COLAREA});
+            return;
+        }
+
+        if ("itmid" in colarea_conf )
+        {
+            var item_conf = get_item_conf(colarea_conf.itmid);
+            if (!item_conf)
             {
-            var mis_itm_need_cnt = 0;
+                ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.CONFIG_ERR});
+                return;
+            }
+
+            // 判断是否任务采集道具
+            if (!("ignoremis" in colarea_conf) || (colarea_conf.ignoremis != 1))
+            {
+                var mis_itm_need_cnt = 0;
+                foreach (mis in ply.pinfo.misacept)
+                {
+                    var conf = get_mis_conf(mis.misid);
+
+                    var mis_goal = _get_mission_goal(ply.pinfo, conf);
+                    if (!mis_goal)
+                    {
+                        Utility.trace_err("mission [" + mis.misid + "] without goal!\n");
+                    }
+                    else
+                    {
+                        if ("colitm" in  mis_goal)
+                        {
+                            foreach (colitm in mis_goal.colitm)
+                            {
+                                if (colitm.tpid != colarea_conf.itmid)
+                                {
+                                    continue;
+                                }
+
+                                var own_cnt = ply.get_package_item_cnt(colitm.tpid);
+                                //own_cnt += ply.get_dpitm_cnt(colitm.tpid);
+                                mis_itm_need_cnt += (colitm.cnt - own_cnt);
+                            }
+                        }
+                        if ("ownitm" in  mis_goal)
+                        {
+                            foreach (ownitm in mis_goal.ownitm)
+                            {
+                                if (ownitm.tpid != colarea_conf.itmid)
+                                {
+                                    continue;
+                                }
+
+                                var own_cnt = ply.get_package_item_cnt(ownitm.tpid);
+                                //own_cnt += ply.get_dpitm_cnt(ownitm.tpid);
+                                mis_itm_need_cnt += (ownitm.cnt - own_cnt);
+                            }
+                        }
+                    }
+                }
+
+                if (mis_itm_need_cnt <= 0)
+                {
+                    // 没有任务需要采集该道具了，采集无法获得道具
+                    return;
+                }
+            }
+
+            var grid_left = ply.cha_info.item.maxi - (ply.pinfo.items.Count + ply.pinfo.ncitems.Count + ply.pinfo.eqpitems.Count);
+            if (grid_left <= 0)
+            {
+                ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PACKAGE_SPACE_NOT_ENOUGH});
+                return;
+            }
+
+            var ret = _pre_add_item(ply, item_conf, 1, grid_left, true);
+            if (ret.res != game_err_code.RES_OK)
+            {
+                ::send_rpc(ply.pinfo.sid, 252, { res = ret.res});
+                return;
+            }
+
+            ply.last_colarea_tm = cur_tm_s;
+
+            var ret_msg = { };
+            var new_items_ary = _add_item(ply, item_conf, ret);
+
+            if (new_items_ary.Count > 0)
+            {
+                ret_msg.add < -new_items_ary;
+            }
+            if (ret.mul_item_modcnt_ary.Count > 0)
+            {
+                ret_msg.modcnts < -ret.mul_item_modcnt_ary;
+            }
+
+            if (ret_msg.Count > 0)
+            {
+                ret_msg.flag < -item_change_msg_flag.ICMF_COL_ITEM; // 采集物品获得
+                ::send_rpc(ply.pinfo.sid, 75, ret_msg);
+            }
+
+            // log itm
+            if (new_items_ary.Count > 0)
+            {
+                _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLAREA_ITM, itm_flag_type.IFT_NEW_ADD, this.mapid, new_items_ary, []);
+            }
+            if (ret.mul_item_modcnt_ary.Count > 0)
+            {
+                var mod_cnt_itms = [];
+                foreach (itm_info in ret.mul_item_modcnt_ary)
+                {
+                    mod_cnt_itms.push(itm_info.itm);
+                }
+                _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLAREA_ITM, itm_flag_type.IFT_MODCNT, this.mapid, mod_cnt_itms, ret.mul_item_modcnt_ary);
+            }
+        }
+        else if ("mid" in colarea_conf )
+        {
+            var send_data = [];
             foreach (mis in ply.pinfo.misacept)
             {
                 var conf = get_mis_conf(mis.misid);
-
                 var mis_goal = _get_mission_goal(ply.pinfo, conf);
-                if (!mis_goal)
+
+                // 更新角色任务杀怪数
+                if ("colm" in mis )
                 {
-                    Utility.trace_err("mission [" + mis.misid + "] without goal!\n");
-                }
-                else
-                {
-                    if ("colitm" in  mis_goal)
-                        {
-                        foreach (colitm in mis_goal.colitm)
-                        {
-                            if (colitm.tpid != colarea_conf.itmid)
-                            {
-                                continue;
-                            }
-
-                            var own_cnt = ply.get_package_item_cnt(colitm.tpid);
-                            //own_cnt += ply.get_dpitm_cnt(colitm.tpid);
-                            mis_itm_need_cnt += (colitm.cnt - own_cnt);
-                        }
-                    }
-                    if ("ownitm" in  mis_goal)
-                        {
-                        foreach (ownitm in mis_goal.ownitm)
-                        {
-                            if (ownitm.tpid != colarea_conf.itmid)
-                            {
-                                continue;
-                            }
-
-                            var own_cnt = ply.get_package_item_cnt(ownitm.tpid);
-                            //own_cnt += ply.get_dpitm_cnt(ownitm.tpid);
-                            mis_itm_need_cnt += (ownitm.cnt - own_cnt);
-                        }
-                    }
-                }
-            }
-
-            if (mis_itm_need_cnt <= 0)
-            {
-                // 没有任务需要采集该道具了，采集无法获得道具
-                return;
-            }
-        }
-
-        var grid_left = ply.cha_info.item.maxi - (ply.pinfo.items.Count + ply.pinfo.ncitems.Count + ply.pinfo.eqpitems.Count);
-        if (grid_left <= 0)
-        {
-                ::send_rpc(ply.pinfo.sid, 252, { res = game_err_code.PACKAGE_SPACE_NOT_ENOUGH});
-            return;
-        }
-
-        var ret = _pre_add_item(ply, item_conf, 1, grid_left, true);
-        if (ret.res != game_err_code.RES_OK)
-        {
-                ::send_rpc(ply.pinfo.sid, 252, { res = ret.res});
-            return;
-        }
-
-        ply.last_colarea_tm = cur_tm_s;
-
-        var ret_msg = { };
-        var new_items_ary = _add_item(ply, item_conf, ret);
-
-        if (new_items_ary.Count > 0)
-        {
-            ret_msg.add < -new_items_ary;
-        }
-        if (ret.mul_item_modcnt_ary.Count > 0)
-        {
-            ret_msg.modcnts < -ret.mul_item_modcnt_ary;
-        }
-
-        if (ret_msg.Count > 0)
-        {
-            ret_msg.flag < -item_change_msg_flag.ICMF_COL_ITEM; // 采集物品获得
-                ::send_rpc(ply.pinfo.sid, 75, ret_msg);
-        }
-
-        // log itm
-        if (new_items_ary.Count > 0)
-        {
-            _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLAREA_ITM, itm_flag_type.IFT_NEW_ADD, this.mapid, new_items_ary, []);
-        }
-        if (ret.mul_item_modcnt_ary.Count > 0)
-        {
-            var mod_cnt_itms = [];
-            foreach (itm_info in ret.mul_item_modcnt_ary)
-            {
-                mod_cnt_itms.push(itm_info.itm);
-            }
-            _log_itm_log(ply, cur_tm_s, itm_act_type.IAT_COLAREA_ITM, itm_flag_type.IFT_MODCNT, this.mapid, mod_cnt_itms, ret.mul_item_modcnt_ary);
-        }
-    }
-        else if ("mid" in colarea_conf )
-        {
-        var send_data = [];
-        foreach (mis in ply.pinfo.misacept)
-        {
-            var conf = get_mis_conf(mis.misid);
-            var mis_goal = _get_mission_goal(ply.pinfo, conf);
-
-            // 更新角色任务杀怪数
-            if ("colm" in mis )
-                {
-                foreach (idx, colm in mis.colm )
+                    foreach (idx, colm in mis.colm )
                     {
-                    if (colm.monid == colarea_conf.mid)
-                    {
-                        var old_colm_cnt = colm.cnt;
-                        ++colm.cnt;
-                        if (mis_goal && ("colmon" in mis_goal) && mis_goal.colmon.Count > idx)
-                            {
-                            if (colm.cnt >= mis_goal.colmon[idx].cnt)
-                            {
-                                colm.cnt = mis_goal.colmon[idx].cnt;
-                            }
-                        }
-
-                        if (old_colm_cnt != colm.cnt)
+                        if (colm.monid == colarea_conf.mid)
                         {
-                            send_data.push( { misid = mis.misid, colmid = colm.monid, cnt = colm.cnt} );
+                            var old_colm_cnt = colm.cnt;
+                            ++colm.cnt;
+                            if (mis_goal && ("colmon" in mis_goal) && mis_goal.colmon.Count > idx)
+                            {
+                                if (colm.cnt >= mis_goal.colmon[idx].cnt)
+                                {
+                                    colm.cnt = mis_goal.colmon[idx].cnt;
+                                }
+                            }
+
+                            if (old_colm_cnt != colm.cnt)
+                            {
+                                send_data.push( { misid = mis.misid, colmid = colm.monid, cnt = colm.cnt} );
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
-        }
 
-        if (send_data.Count > 0)
-        {
-            ply.last_colarea_tm = cur_tm_s;
-            foreach (data in send_data)
+            if (send_data.Count > 0)
             {
+                ply.last_colarea_tm = cur_tm_s;
+                foreach (data in send_data)
+                {
                     // send mis_data_modify msg
                     ::send_rpc(ply.pinfo.sid, 113, data);
+                }
             }
         }
     }
-}
-public void teststep(pl, step )
-{
-    if (!("cid" in pl ) ) return;
-    if (!isdebug(pl)) return;
-    Utility.debug("XXXXXXXXXXXXX[" + step + "]");
-}
-public void do_attack(game_ref, atker, rpc)
-{
-    var tar_iid = rpc.to_iid;
-    if (tar_iid != atker.get_iid() && tar_iid in this.map_sprites && atker.get_iid() in this.map_sprites)
+    public void teststep(pl, step )
+    {
+        if (!("cid" in pl ) ) return;
+        if (!isdebug(pl)) return;
+        Utility.debug("XXXXXXXXXXXXX[" + step + "]");
+    }
+    public void do_attack(game_ref, atker, rpc)
+    {
+        var tar_iid = rpc.to_iid;
+        if (tar_iid != atker.get_iid() && tar_iid in this.map_sprites && atker.get_iid() in this.map_sprites)
         {
-        var tar_spr = this.map_sprites[tar_iid];
+            var tar_spr = this.map_sprites[tar_iid];
 
-        var pl = atker.get_pack_data();
-        var tar_pl = tar_spr.get_pack_data();
+            var pl = atker.get_pack_data();
+            var tar_pl = tar_spr.get_pack_data();
 
-        if (atker.get_sprite_type() == map_sprite_type.MstPlayer)
-        {
-
-            teststep(pl, 11);
-
-            if (atker.isghost())
+            if (atker.get_sprite_type() == map_sprite_type.MstPlayer)
             {
-                // 灵魂状态，不能攻击
-                return;
-            }
 
-            // 中断打坐
-            //atker.try_stop_recover();
+                teststep(pl, 11);
 
-            if (tar_spr.get_sprite_type() == map_sprite_type.MstPlayer)
-            {
-                // 玩家打玩家，pk
-                if (this.pk_seting == map_pk_setting_type.MPST_PEACE)
+                if (atker.isghost())
                 {
-                        // send err_msg msg
-                        ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_MAP});
+                    // 灵魂状态，不能攻击
                     return;
                 }
 
-                if (pl.in_pczone || tar_pl.in_pczone)
+                // 中断打坐
+                //atker.try_stop_recover();
+
+                if (tar_spr.get_sprite_type() == map_sprite_type.MstPlayer)
                 {
-                        // send err_msg msg
-                        ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_ZONE});
-                    return;
-                }
-
-                if (this.pk_seting == map_pk_setting_type.MPST_NORMAL)
-                {
-                    if (!tar_spr.can_atk_direct())
-                    {//不可攻击的玩家   
-                     //未开pk状态  不可攻击 此类玩家
-                     //if( pl.pk_state == pk_state_type.PKST_PEACE )
-                     //{
-                     //    ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
-                     //    return;
-                     //}
-                     //开pk状态 只能攻击指定的 此类玩家
-                     //if( atker.get_pk_tar_iid() != tar_pl.iid ) return;   
-                        if (!atker.can_atk(tar_spr))
-                        {
-                            teststep(pl, 12);
-                            return;
-                        }
-
-                    }
-                }
-                else
-                {//pk地图
-                    if (!atker.can_atk(tar_spr))
-                    {
-                        teststep(pl, 13);
-                        return;
-                    }
-                    //{//盟友  
-                    //    //未开pk状态  不可攻击盟友  
-                    //    if( pl.pk_state == pk_state_type.PKST_PEACE )
-                    //    {
-                    //        ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
-                    //        return;
-                    //    }
-
-                    //    //开pk状态 只能攻击指定的盟友
-                    //    if( atker.get_pk_tar_iid() != tar_pl.iid ) return;
-                    //}       
-                }
-            }
-            else if (tar_spr.get_sprite_type() == map_sprite_type.MstMonster)
-            {
-                if (tar_spr.owner_ply != null)
-                {//战宠     
-                    var owner_sprite = tar_spr.owner_ply;
-                    var ower_pl = owner_sprite.get_pack_data();
-                    if (ower_pl.iid == pl.iid)
-                    {
-                        return { res = game_err_code.CANT_ATTACK_SELF_PET};
-                    }
-                    // 玩家打战宠，pk
+                    // 玩家打玩家，pk
                     if (this.pk_seting == map_pk_setting_type.MPST_PEACE)
                     {
-                            // send err_msg msg
-                            ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_MAP});
+                        // send err_msg msg
+                        ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_MAP});
                         return;
                     }
 
-                    if (pl.in_pczone || ower_pl.in_pczone)
+                    if (pl.in_pczone || tar_pl.in_pczone)
                     {
-                            // send err_msg msg
-                            ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_ZONE});
+                        // send err_msg msg
+                        ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_ZONE});
                         return;
                     }
 
                     if (this.pk_seting == map_pk_setting_type.MPST_NORMAL)
                     {
-                        if (!owner_sprite.can_atk_direct())
+                        if (!tar_spr.can_atk_direct())
                         {//不可攻击的玩家   
                          //未开pk状态  不可攻击 此类玩家
                          //if( pl.pk_state == pk_state_type.PKST_PEACE )
                          //{
                          //    ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
                          //    return;
-                         //}     
-
-                            if (!atker.can_atk(owner_sprite))
+                         //}
+                         //开pk状态 只能攻击指定的 此类玩家
+                         //if( atker.get_pk_tar_iid() != tar_pl.iid ) return;   
+                            if (!atker.can_atk(tar_spr))
                             {
-                                teststep(pl, 15);
+                                teststep(pl, 12);
                                 return;
                             }
+
                         }
                     }
                     else
                     {//pk地图
-                        if (!atker.can_atk(owner_sprite))
+                        if (!atker.can_atk(tar_spr))
                         {
-                            teststep(pl, 16);
+                            teststep(pl, 13);
                             return;
                         }
                         //{//盟友  
@@ -6578,284 +6071,259 @@ public void do_attack(game_ref, atker, rpc)
                         //        ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
                         //        return;
                         //    }
+
+                        //    //开pk状态 只能攻击指定的盟友
+                        //    if( atker.get_pk_tar_iid() != tar_pl.iid ) return;
                         //}       
                     }
                 }
+                else if (tar_spr.get_sprite_type() == map_sprite_type.MstMonster)
+                {
+                    if (tar_spr.owner_ply != null)
+                    {//战宠     
+                        var owner_sprite = tar_spr.owner_ply;
+                        var ower_pl = owner_sprite.get_pack_data();
+                        if (ower_pl.iid == pl.iid)
+                        {
+                            return { res = game_err_code.CANT_ATTACK_SELF_PET};
+                        }
+                        // 玩家打战宠，pk
+                        if (this.pk_seting == map_pk_setting_type.MPST_PEACE)
+                        {
+                            // send err_msg msg
+                            ::send_rpc(pl.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_MAP});
+                            return;
+                        }
+
+                        if (pl.in_pczone || ower_pl.in_pczone)
+                        {
+                            // send err_msg msg
+                            ::send_rpc(atker.pinfo.sid, 252, { res = game_err_code.CANT_PK_IN_PEACE_ZONE});
+                            return;
+                        }
+
+                        if (this.pk_seting == map_pk_setting_type.MPST_NORMAL)
+                        {
+                            if (!owner_sprite.can_atk_direct())
+                            {//不可攻击的玩家   
+                             //未开pk状态  不可攻击 此类玩家
+                             //if( pl.pk_state == pk_state_type.PKST_PEACE )
+                             //{
+                             //    ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
+                             //    return;
+                             //}     
+
+                                if (!atker.can_atk(owner_sprite))
+                                {
+                                    teststep(pl, 15);
+                                    return;
+                                }
+                            }
+                        }
+                        else
+                        {//pk地图
+                            if (!atker.can_atk(owner_sprite))
+                            {
+                                teststep(pl, 16);
+                                return;
+                            }
+                            //{//盟友  
+                            //    //未开pk状态  不可攻击盟友  
+                            //    if( pl.pk_state == pk_state_type.PKST_PEACE )
+                            //    {
+                            //        ::send_rpc( pl.sid, 252, {res=game_err_code.CANT_ATK_PL_IN_PEACE});
+                            //        return;
+                            //    }
+                            //}       
+                        }
+                    }
+                }
             }
-        }
-        else
-        {
-            if (!atker.can_atk(tar_spr))
+            else
             {
-                teststep(pl, 17);
-
-                return;
-            }
-        }
-
-        teststep(pl, 2);
-
-        if (!tar_spr.isdie() && !tar_spr.isghost())
-        {
-
-            teststep(pl, 3);
-
-            if (!("atking" in pl) || pl.atking.tar_iid != tar_iid)
+                if (!atker.can_atk(tar_spr))
                 {
+                    teststep(pl, 17);
 
-                teststep(pl, 4);
-
-                var cur_clock_tm = sys.clock_time();
-
-                var cd_tm = atker.get_atk_cd();
-                var start_tm = cur_clock_tm - cd_tm;
-                if (start_tm < pl.last_atk_tm)
-                {
-                    start_tm = pl.last_atk_tm;
+                    return;
                 }
-
-                if (rpc.start_tm - cur_clock_tm > 0)
-                {
-                    rpc.start_tm = cur_clock_tm;
-                }
-
-                var data = { frm_iid = atker.get_iid(), to_iid = tar_iid, start_tm = rpc.start_tm };
-
-                pl.atking < - { start_tm = start_tm, tar_iid = tar_iid, trace_tm_left = cur_clock_tm - rpc.start_tm};
-
-                // broadcast attack msg
-                //this.broadcast_map_rpc(12, data);
-                atker.broad_cast_zone_msg_and_self(12, data);
-
-                // update attacker immediately
-                atker.update(game_ref, cur_clock_tm, 0);
             }
 
+            teststep(pl, 2);
+
+            if (!tar_spr.isdie() && !tar_spr.isghost())
+            {
+
+                teststep(pl, 3);
+
+                if (!("atking" in pl) || pl.atking.tar_iid != tar_iid)
+                {
+
+                    teststep(pl, 4);
+
+                    var cur_clock_tm = sys.clock_time();
+
+                    var cd_tm = atker.get_atk_cd();
+                    var start_tm = cur_clock_tm - cd_tm;
+                    if (start_tm < pl.last_atk_tm)
+                    {
+                        start_tm = pl.last_atk_tm;
+                    }
+
+                    if (rpc.start_tm - cur_clock_tm > 0)
+                    {
+                        rpc.start_tm = cur_clock_tm;
+                    }
+
+                    var data = { frm_iid = atker.get_iid(), to_iid = tar_iid, start_tm = rpc.start_tm };
+
+                    pl.atking < - { start_tm = start_tm, tar_iid = tar_iid, trace_tm_left = cur_clock_tm - rpc.start_tm};
+
+                    // broadcast attack msg
+                    //this.broadcast_map_rpc(12, data);
+                    atker.broad_cast_zone_msg_and_self(12, data);
+
+                    // update attacker immediately
+                    atker.update(game_ref, cur_clock_tm, 0);
+                }
+
+            }
         }
-    }
         else
         {
-        // error, attacker or target not exist
-        Utility.trace_err("persist_game attacker [" + atker.get_iid() + "] or target[" + tar_iid + "] not exist\n");
-    }
-}
-
-public bool is_grid_walkableEx(int gx, int gy)
-{
-    //return true;
-    return this.is_grid_walkable(gx, gy);
-
-}
-//获取 射线上最远可行点
-
-
-
-
-public void _add_map_eff(caster, target_pos, mapstat_conf, per, cur_tm_s, cur_clock_tm, skid)
-{
-    if (!(mapstat_conf.id in game_data_conf.skils.map_state))
-        {
-        return;
+            // error, attacker or target not exist
+            Utility.trace_err("persist_game attacker [" + atker.get_iid() + "] or target[" + tar_iid + "] not exist\n");
+        }
     }
 
-    var conf = game_data_conf.skils.map_state[mapstat_conf.id];
-
-    var pl = caster.get_pack_data();
-    if (!target_pos)
+    public bool is_grid_walkableEx(int gx, int gy)
     {
-        target_pos = pl;
-    }
-    ++mapstatid_seed;
+        //return true;
+        return this.is_grid_walkable(gx, gy);
 
-    var new_map_stat = {id=mapstatid_seed, tpid=mapstat_conf.id, x=target_pos.x, y=target_pos.y, tm=cur_tm_s+mapstat_conf.tm,
+    }
+    //获取 射线上最远可行点
+
+
+
+
+    public void _add_map_eff(caster, target_pos, mapstat_conf, per, cur_tm_s, cur_clock_tm, skid)
+    {
+        if (!(mapstat_conf.id in game_data_conf.skils.map_state))
+        {
+            return;
+        }
+
+        var conf = game_data_conf.skils.map_state[mapstat_conf.id];
+
+        var pl = caster.get_pack_data();
+        if (!target_pos)
+        {
+            target_pos = pl;
+        }
+        ++mapstatid_seed;
+
+        var new_map_stat = {id=mapstatid_seed, tpid=mapstat_conf.id, x=target_pos.x, y=target_pos.y, tm=cur_tm_s+mapstat_conf.tm,
             crtiid=pl.iid, nexttm=0, trgcnt=0, per=per+mapstat_conf.per, conf=conf, skid=skid};
 
-    this.mapstats.push(new_map_stat);
+        this.mapstats.push(new_map_stat);
 
-    // 通知客户端创建新的地图技能状态对象
-    var add_npc_msg = { mapstat = 1, mapstatadd =[{ id = new_map_stat.id, tpid = new_map_stat.tpid, x = new_map_stat.x, y = new_map_stat.y, tm = new_map_stat.tm }]};
-    this.broadcast_map_rpc(6, add_npc_msg);
+        // 通知客户端创建新的地图技能状态对象
+        var add_npc_msg = { mapstat = 1, mapstatadd =[{ id = new_map_stat.id, tpid = new_map_stat.tpid, x = new_map_stat.x, y = new_map_stat.y, tm = new_map_stat.tm }]};
+        this.broadcast_map_rpc(6, add_npc_msg);
 
-    // 计算一次地图对象效果
-    if (this._update_mapstat(new_map_stat, cur_tm_s, cur_clock_tm))
-    {
-        // 需要移除
-        this.mapstats.pop();
+        // 计算一次地图对象效果
+        if (this._update_mapstat(new_map_stat, cur_tm_s, cur_clock_tm))
+        {
+            // 需要移除
+            this.mapstats.pop();
 
-        // bcast add_npcs msg
-        this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = new_map_stat.id}]});
+            // bcast add_npcs msg
+            this.broadcast_map_rpc(6, { mapstat = 2, mapstatrmv =[{ id = new_map_stat.id}]});
+        }
     }
-}
 
-// 更新飞行道具
-public void update_flys(cur_clock_tm)
-{
-    for (var idx = 0; idx < this.map_flys.Count; ++idx)
+    // 更新飞行道具
+    public void update_flys(cur_clock_tm)
     {
-        var fly = this.map_flys[idx];
-        //Utility.trace_info("update_flys\n");
+        for (var idx = 0; idx < this.map_flys.Count; ++idx)
+        {
+            var fly = this.map_flys[idx];
+            //Utility.trace_info("update_flys\n");
 
-        if (!(fly.frm_iid in this.map_sprites))
+            if (!(fly.frm_iid in this.map_sprites))
             {
+            this.map_flys.remove(idx);
+            --idx;
+            continue;
+        }
+
+        if (fly.end_tm > cur_clock_tm)
+        {
+            continue;
+        }
+
+        var caster = this.map_sprites[fly.frm_iid];
+        var target = null;
+        if (fly.tar_iid in this.map_sprites)
+            {
+            target = this.map_sprites[fly.tar_iid];
+        }
+
+        this._post_cast_skill(cur_clock_tm, caster, fly.rpc, fly.cast_skill_res, target, fly.target_pos, false);
         this.map_flys.remove(idx);
         --idx;
-        continue;
     }
 
-    if (fly.end_tm > cur_clock_tm)
+    public void _trigger_attchk(ply, conf)
     {
-        continue;
-    }
-
-    var caster = this.map_sprites[fly.frm_iid];
-    var target = null;
-    if (fly.tar_iid in this.map_sprites)
-            {
-        target = this.map_sprites[fly.tar_iid];
-    }
-
-    this._post_cast_skill(cur_clock_tm, caster, fly.rpc, fly.cast_skill_res, target, fly.target_pos, false);
-    this.map_flys.remove(idx);
-    --idx;
-}
-
-public void _trigger_attchk(ply, conf)
-{
-    if ("attchk" in conf)
+        if ("attchk" in conf)
         {
-        foreach (attchk in conf.attchk)
-        {
-            if (ply.check_att(attchk) != game_err_code.RES_OK)
+            foreach (attchk in conf.attchk)
             {
-                return false;
+                if (ply.check_att(attchk) != game_err_code.RES_OK)
+                {
+                    return false;
+                }
             }
         }
+        return true;
     }
-    return true;
-}
 
-public void on_accept_mis(ply, mis_conf )
-{
-    _on_mis_trigger(ply, mis_conf.id, "accept");
-}
-
-public void on_comit_mis(ply, mis_conf )
-{
-    _on_mis_trigger(ply, mis_conf.id, "comit");
-}
-
-public void _on_mis_trigger(IBaseUnit ply, misid, state )
-{
-    if (this.mistriggers.Count <= 0)
+    public void on_accept_mis(ply, mis_conf )
     {
-        return;
+        _on_mis_trigger(ply, mis_conf.id, "accept");
     }
 
-    // 更新触发器       
-    var to_rmv_tmtrgids = [];
-    var to_rmv_areatrgids = [];
-    var to_rmv_kmtrgids = [];
-    var to_rmv_uitmtrgids = [];
-    var to_rmv_mistrgids = [];
-    var to_add_trgconf = [];
-    var to_rmv_othertrgids = [];
+    public void on_comit_mis(ply, mis_conf )
+    {
+        _on_mis_trigger(ply, mis_conf.id, "comit");
+    }
 
-    foreach (trid, trg in this.mistriggers)
+    public void _on_mis_trigger(IBaseUnit ply, misid, state )
+    {
+        if (this.mistriggers.Count <= 0)
         {
-        var mis_trg_conf = trg.conf.mis[0];
-
-        if (mis_trg_conf.misid != misid || mis_trg_conf.state != state)
-        {
-            continue;
+            return;
         }
 
-        if (!_trigger_attchk(ply, trg.conf))
+        // 更新触发器       
+        var to_rmv_tmtrgids = [];
+        var to_rmv_areatrgids = [];
+        var to_rmv_kmtrgids = [];
+        var to_rmv_uitmtrgids = [];
+        var to_rmv_mistrgids = [];
+        var to_add_trgconf = [];
+        var to_rmv_othertrgids = [];
+
+        foreach (trid, trg in this.mistriggers)
         {
-            continue;
-        }
+            var mis_trg_conf = trg.conf.mis[0];
 
-        // 触发
-        --trg.cnt;
-
-        if (trg.cnt <= 0)
-        {
-            to_rmv_mistrgids.push(trid);
-        }
-
-        this._trig_res(trg.conf, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-    }
-
-    foreach (trid in to_rmv_tmtrgids)
-    {
-        if (trid in this.tmtriggers) delete this.tmtriggers[trid];
-    }
-    foreach (trid in to_rmv_areatrgids)
-    {
-        if (trid in this.areatriggers) delete this.areatriggers[trid];
-    }
-    foreach (trid in to_rmv_kmtrgids)
-    {
-        if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-    }
-    foreach (trid in to_rmv_uitmtrgids)
-    {
-        if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-    }
-    foreach (trid in to_rmv_mistrgids)
-    {
-        if (trid in this.mistriggers) delete this.mistriggers[trid];
-    }
-    foreach (trid in to_rmv_othertrgids)
-    {
-        if (trid in this.othertriggers) delete this.othertriggers[trid];
-    }
-    foreach (trid in to_add_trgconf)
-    {
-        this._add_triger(this.trigger_conf[trid]);
-    }
-}
-
-public void on_use_itm(IBaseUnit ply, itm_conf)
-{
-    // 角色使用道具
-    //Utility.trace_info("map["+this.mapid+"] on_use_itm ["+itm_conf.id+"]\n");
-
-    if (this.useitmtriggers.Count <= 0)
-    {
-        return;
-    }
-
-    var clan_triged = false;
-
-    // 更新触发器
-
-    var to_rmv_tmtrgids = [];
-    var to_rmv_areatrgids = [];
-    var to_rmv_kmtrgids = [];
-    var to_rmv_uitmtrgids = [];
-    var to_rmv_mistrgids = [];
-    var to_add_trgconf = [];
-    var to_rmv_othertrgids = [];
-
-    foreach (trid, trg in this.useitmtriggers)
-        {
-        var uitm_trg_conf = trg.conf.useitm[0];
-
-        if (uitm_trg_conf.tpid != itm_conf.id)
-        {
-            continue;
-        }
-
-        if (uitm_trg_conf.sideid != 0 && uitm_trg_conf.sideid != ply.pinfo.lvlsideid)
-        {
-            continue;
-        }
-
-        //Utility.trace_info("map["+this.mapid+"] on_use_itm trid ["+trid+"]\n");
-
-        if (ply.pinfo.x > uitm_trg_conf.x && ply.pinfo.y > uitm_trg_conf.y &&
-            ply.pinfo.x < uitm_trg_conf.x + uitm_trg_conf.width && ply.pinfo.y < uitm_trg_conf.y + uitm_trg_conf.height)
-        {
+            if (mis_trg_conf.misid != misid || mis_trg_conf.state != state)
+            {
+                continue;
+            }
 
             if (!_trigger_attchk(ply, trg.conf))
             {
@@ -6867,212 +6335,300 @@ public void on_use_itm(IBaseUnit ply, itm_conf)
 
             if (trg.cnt <= 0)
             {
-                to_rmv_uitmtrgids.push(trid);
-
-                if ("clantrig" in uitm_trg_conf)
-                    {
-                    clan_triged = true;
-                }
+                to_rmv_mistrgids.push(trid);
             }
 
             this._trig_res(trg.conf, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
         }
+
+        foreach (trid in to_rmv_tmtrgids)
+        {
+            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+        }
+        foreach (trid in to_rmv_areatrgids)
+        {
+            if (trid in this.areatriggers) delete this.areatriggers[trid];
+        }
+        foreach (trid in to_rmv_kmtrgids)
+        {
+            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
+        }
+        foreach (trid in to_rmv_uitmtrgids)
+        {
+            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+        }
+        foreach (trid in to_rmv_mistrgids)
+        {
+            if (trid in this.mistriggers) delete this.mistriggers[trid];
+        }
+        foreach (trid in to_rmv_othertrgids)
+        {
+            if (trid in this.othertriggers) delete this.othertriggers[trid];
+        }
+        foreach (trid in to_add_trgconf)
+        {
+            this._add_triger(this.trigger_conf[trid]);
+        }
     }
 
-    foreach (trid in to_rmv_tmtrgids)
+    public void on_use_itm(IBaseUnit ply, itm_conf)
     {
-        if (trid in this.tmtriggers) delete this.tmtriggers[trid];
-    }
-    foreach (trid in to_rmv_areatrgids)
-    {
-        if (trid in this.areatriggers) delete this.areatriggers[trid];
-    }
-    foreach (trid in to_rmv_kmtrgids)
-    {
-        if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-    }
-    foreach (trid in to_rmv_uitmtrgids)
-    {
-        if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-    }
-    foreach (trid in to_rmv_mistrgids)
-    {
-        if (trid in this.mistriggers) delete this.mistriggers[trid];
-    }
-    foreach (trid in to_rmv_othertrgids)
-    {
-        if (trid in this.othertriggers) delete this.othertriggers[trid];
-    }
-    foreach (trid in to_add_trgconf)
-    {
-        this._add_triger(this.trigger_conf[trid]);
-    }
+        // 角色使用道具
+        //Utility.trace_info("map["+this.mapid+"] on_use_itm ["+itm_conf.id+"]\n");
 
-    if (clan_triged)
-    {
-        // 帮派触发的使用道具触发器（召唤帮派boss），需要记录触发时间
-
-        if ("clanid" in ply.pinfo)
-            {
-
-            // 更新已方帮派数据
-            var clan_mgr = global_data_mgrs.clan;
-            clan_mgr.lock_data(ply.pinfo.clanid, server_const.GLOBAL_DATA_LOCK_TM); // 锁定数据对象，注意，所有跳出函数代码分支必须要有unlock
-
-            var self_clan_db_data = _get_clan_data(ply.pinfo.clanid);
-            if (self_clan_db_data.Count > 0)
-            {
-                var self_clan_info = self_clan_db_data[0].get_data();
-
-                self_clan_info.data.uitrig[itm_conf.id] < -sys.time(); // 记录当前时间
-
-                self_clan_db_data[0].mod_data(self_clan_info);
-                self_clan_db_data[0].db_update();
-            }
-
-            clan_mgr.unlock_data(ply.pinfo.clanid); // 解锁
+        if (this.useitmtriggers.Count <= 0)
+        {
+            return;
         }
 
-    }
-}
+        var clan_triged = false;
 
+        // 更新触发器
 
-public void trig_other_triger(Variant trig_spr, int trigid)
-{
-    var to_rmv_tmtrgids = [];
-    var to_rmv_areatrgids = [];
-    var to_rmv_kmtrgids = [];
-    var to_rmv_uitmtrgids = [];
-    var to_rmv_mistrgids =[];
-    var to_add_trgconf = [];
-    var to_rmv_othertrgids = [];
+        var to_rmv_tmtrgids = [];
+        var to_rmv_areatrgids = [];
+        var to_rmv_kmtrgids = [];
+        var to_rmv_uitmtrgids = [];
+        var to_rmv_mistrgids = [];
+        var to_add_trgconf = [];
+        var to_rmv_othertrgids = [];
 
-    //Utility.trace_info("trig_other_triger ["+trigid+"]\n");
-    //sys.dumpobj(this.othertriggers);
-
-    foreach (trid, trg in this.othertriggers)
+        foreach (trid, trg in this.useitmtriggers)
         {
-        // 触发
-        if (trid != trigid)
-        {
-            continue;
-        }
+            var uitm_trg_conf = trg.conf.useitm[0];
 
-        if (trig_spr && trig_spr.get_sprite_type() == map_sprite_type.MstPlayer)
-        {
-            if (!_trigger_attchk(trig_spr, trg.conf))
+            if (uitm_trg_conf.tpid != itm_conf.id)
             {
                 continue;
             }
-        }
 
-        --trg.cnt;
-
-        if (trg.cnt <= 0)
-        {
-            to_rmv_othertrgids.push(trid);
-        }
-
-        this._trig_res(trg.conf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
-    }
-
-    foreach (trid in to_rmv_tmtrgids)
-    {
-        if (trid in this.tmtriggers) delete this.tmtriggers[trid];
-    }
-    foreach (trid in to_rmv_areatrgids)
-    {
-        if (trid in this.areatriggers) delete this.areatriggers[trid];
-    }
-    foreach (trid in to_rmv_kmtrgids)
-    {
-        if (trid in this.kmtriggers) delete this.kmtriggers[trid];
-    }
-    foreach (trid in to_rmv_uitmtrgids)
-    {
-        if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
-    }
-    foreach (trid in to_rmv_mistrgids)
-    {
-        if (trid in this.mistriggers) delete this.mistriggers[trid];
-    }
-    foreach (trid in to_rmv_othertrgids)
-    {
-        if (trid in this.othertriggers) delete this.othertriggers[trid];
-    }
-    foreach (trid in to_add_trgconf)
-    {
-        this._add_triger(this.trigger_conf[trid]);
-    }
-}
-
-public void _update_mapstat(mapstat, cur_tm_s, cur_clock_tm)
-{
-    if (mapstat.nexttm > cur_clock_tm)
-    {
-        return false;
-    }
-
-    if (!(mapstat.crtiid in this.map_sprites))
-        {
-        return true;
-    }
-
-    mapstat.nexttm = cur_clock_tm + mapstat.conf.tick;
-
-    var caster = this.map_sprites[mapstat.crtiid];
-
-    var rang2 = mapstat.conf.rang * mapstat.conf.rang;
-
-    var affed_spr = 0;
-    foreach (spr in this.map_sprites)
-    {
-        var pl = spr.get_pack_data();
-
-        var x_dist = mapstat.x - pl.x;
-        var y_dist = mapstat.y - pl.y;
-
-        if (x_dist * x_dist + y_dist * y_dist > rang2)
-        {
-            continue;
-        }
-
-        var triged = false;
-        foreach (tres in mapstat.conf.tres)
-        {
-            if (apply_skill_eff_to(cur_clock_tm, caster, spr, tres, tres.aff, mapstat.skid, mapstat.per))
+            if (uitm_trg_conf.sideid != 0 && uitm_trg_conf.sideid != ply.pinfo.lvlsideid)
             {
-                triged = true;
+                continue;
+            }
+
+            //Utility.trace_info("map["+this.mapid+"] on_use_itm trid ["+trid+"]\n");
+
+            if (ply.pinfo.x > uitm_trg_conf.x && ply.pinfo.y > uitm_trg_conf.y &&
+                ply.pinfo.x < uitm_trg_conf.x + uitm_trg_conf.width && ply.pinfo.y < uitm_trg_conf.y + uitm_trg_conf.height)
+            {
+
+                if (!_trigger_attchk(ply, trg.conf))
+                {
+                    continue;
+                }
+
+                // 触发
+                --trg.cnt;
+
+                if (trg.cnt <= 0)
+                {
+                    to_rmv_uitmtrgids.push(trid);
+
+                    if ("clantrig" in uitm_trg_conf)
+                    {
+                        clan_triged = true;
+                    }
+                }
+
+                this._trig_res(trg.conf, ply, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
             }
         }
 
-        if (!triged)
+        foreach (trid in to_rmv_tmtrgids)
         {
-            continue;
+            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+        }
+        foreach (trid in to_rmv_areatrgids)
+        {
+            if (trid in this.areatriggers) delete this.areatriggers[trid];
+        }
+        foreach (trid in to_rmv_kmtrgids)
+        {
+            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
+        }
+        foreach (trid in to_rmv_uitmtrgids)
+        {
+            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+        }
+        foreach (trid in to_rmv_mistrgids)
+        {
+            if (trid in this.mistriggers) delete this.mistriggers[trid];
+        }
+        foreach (trid in to_rmv_othertrgids)
+        {
+            if (trid in this.othertriggers) delete this.othertriggers[trid];
+        }
+        foreach (trid in to_add_trgconf)
+        {
+            this._add_triger(this.trigger_conf[trid]);
         }
 
-        ++affed_spr;
-        ++mapstat.trgcnt;
-
-        if (mapstat.conf.trgcnt > 0 && mapstat.trgcnt >= mapstat.conf.trgcnt)
+        if (clan_triged)
         {
-            // 触发次数完了，需要删除
+            // 帮派触发的使用道具触发器（召唤帮派boss），需要记录触发时间
+
+            if ("clanid" in ply.pinfo)
+            {
+
+                // 更新已方帮派数据
+                var clan_mgr = global_data_mgrs.clan;
+                clan_mgr.lock_data(ply.pinfo.clanid, server_const.GLOBAL_DATA_LOCK_TM); // 锁定数据对象，注意，所有跳出函数代码分支必须要有unlock
+
+                var self_clan_db_data = _get_clan_data(ply.pinfo.clanid);
+                if (self_clan_db_data.Count > 0)
+                {
+                    var self_clan_info = self_clan_db_data[0].get_data();
+
+                    self_clan_info.data.uitrig[itm_conf.id] < -sys.time(); // 记录当前时间
+
+                    self_clan_db_data[0].mod_data(self_clan_info);
+                    self_clan_db_data[0].db_update();
+                }
+
+                clan_mgr.unlock_data(ply.pinfo.clanid); // 解锁
+            }
+
+        }
+    }
+
+
+    public void trig_other_triger(Variant trig_spr, int trigid)
+    {
+        var to_rmv_tmtrgids = [];
+        var to_rmv_areatrgids = [];
+        var to_rmv_kmtrgids = [];
+        var to_rmv_uitmtrgids = [];
+        var to_rmv_mistrgids =[];
+        var to_add_trgconf = [];
+        var to_rmv_othertrgids = [];
+
+        //Utility.trace_info("trig_other_triger ["+trigid+"]\n");
+        //sys.dumpobj(this.othertriggers);
+
+        foreach (trid, trg in this.othertriggers)
+        {
+            // 触发
+            if (trid != trigid)
+            {
+                continue;
+            }
+
+            if (trig_spr && trig_spr.get_sprite_type() == map_sprite_type.MstPlayer)
+            {
+                if (!_trigger_attchk(trig_spr, trg.conf))
+                {
+                    continue;
+                }
+            }
+
+            --trg.cnt;
+
+            if (trg.cnt <= 0)
+            {
+                to_rmv_othertrgids.push(trid);
+            }
+
+            this._trig_res(trg.conf, trig_spr, to_add_trgconf, to_rmv_tmtrgids, to_rmv_areatrgids, to_rmv_kmtrgids, to_rmv_uitmtrgids, to_rmv_mistrgids, to_rmv_othertrgids);
+        }
+
+        foreach (trid in to_rmv_tmtrgids)
+        {
+            if (trid in this.tmtriggers) delete this.tmtriggers[trid];
+        }
+        foreach (trid in to_rmv_areatrgids)
+        {
+            if (trid in this.areatriggers) delete this.areatriggers[trid];
+        }
+        foreach (trid in to_rmv_kmtrgids)
+        {
+            if (trid in this.kmtriggers) delete this.kmtriggers[trid];
+        }
+        foreach (trid in to_rmv_uitmtrgids)
+        {
+            if (trid in this.useitmtriggers) delete this.useitmtriggers[trid];
+        }
+        foreach (trid in to_rmv_mistrgids)
+        {
+            if (trid in this.mistriggers) delete this.mistriggers[trid];
+        }
+        foreach (trid in to_rmv_othertrgids)
+        {
+            if (trid in this.othertriggers) delete this.othertriggers[trid];
+        }
+        foreach (trid in to_add_trgconf)
+        {
+            this._add_triger(this.trigger_conf[trid]);
+        }
+    }
+
+    public void _update_mapstat(mapstat, cur_tm_s, cur_clock_tm)
+    {
+        if (mapstat.nexttm > cur_clock_tm)
+        {
+            return false;
+        }
+
+        if (!(mapstat.crtiid in this.map_sprites))
+        {
             return true;
         }
 
-        if (affed_spr >= mapstat.conf.maxi)
+        mapstat.nexttm = cur_clock_tm + mapstat.conf.tick;
+
+        var caster = this.map_sprites[mapstat.crtiid];
+
+        var rang2 = mapstat.conf.rang * mapstat.conf.rang;
+
+        var affed_spr = 0;
+        foreach (spr in this.map_sprites)
         {
-            break;
+            var pl = spr.get_pack_data();
+
+            var x_dist = mapstat.x - pl.x;
+            var y_dist = mapstat.y - pl.y;
+
+            if (x_dist * x_dist + y_dist * y_dist > rang2)
+            {
+                continue;
+            }
+
+            var triged = false;
+            foreach (tres in mapstat.conf.tres)
+            {
+                if (apply_skill_eff_to(cur_clock_tm, caster, spr, tres, tres.aff, mapstat.skid, mapstat.per))
+                {
+                    triged = true;
+                }
+            }
+
+            if (!triged)
+            {
+                continue;
+            }
+
+            ++affed_spr;
+            ++mapstat.trgcnt;
+
+            if (mapstat.conf.trgcnt > 0 && mapstat.trgcnt >= mapstat.conf.trgcnt)
+            {
+                // 触发次数完了，需要删除
+                return true;
+            }
+
+            if (affed_spr >= mapstat.conf.maxi)
+            {
+                break;
+            }
         }
-    }
 
-    if (mapstat.tm <= cur_tm_s)
-    {
-        return true;
-    }
+        if (mapstat.tm <= cur_tm_s)
+        {
+            return true;
+        }
 
-    return false;
-}
+        return false;
+    }
 
 
 

@@ -500,7 +500,7 @@ namespace SceneTest
 
 
 
-        public static SimpleState add_state_to_pl(long cur_clock_tm, IBaseUnit target, tres_conf state, IBaseUnit frm_sprite, int per, bool bremark = true)
+        public static MapUnitState add_state_to_pl(long cur_clock_tm, IBaseUnit target, tres_conf state, IBaseUnit frm_sprite, int per, bool bremark = true)
         {
             if (target.isdie() || target.isghost())
             {
@@ -691,7 +691,7 @@ namespace SceneTest
                 frm_iid = frm_pl.iid;
             }
 
-            SimpleState obj = new SimpleState()
+            MapUnitState obj = new MapUnitState()
             {
                 id = state.tar_state,
                 par = (int)(state.state_par * per / 1000.0),

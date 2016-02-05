@@ -10,39 +10,10 @@ using System.Text;
 
 namespace SceneTest
 {
-    //public class add_stat
-    //{
-    //    public int tar_state { get; set; }
-    //    public int state_par { get; set; }
-    //    public int state_tm { get; set; }
-    //}
-
-    //    public class cast_skill_res
-    //{
-    //    //public skill_level_conf skill
-    //    public int skilv { get; set; }
-
-    //    public game_err_code res { get; set; }
-
-    //    public cast_skill_res(game_err_code res_code)
-    //    {
-    //        res = res_code;
-    //    }
-    //}
-
-
-
     public class damage_attr
     {
 
     }
-
-
-
-
-
-
-
 
     public static class ExpandedFunc
     {
@@ -104,7 +75,7 @@ namespace SceneTest
         public long ticktm { get; set; }
 
     }
-    public class SimpleState
+    public class MapUnitState
     {
         public int frm_iid { get; set; }
         public state_conf desc { get; set; }
@@ -127,7 +98,7 @@ namespace SceneTest
 
         public Dictionary<string, int> attadj { get; set; }
 
-        public SimpleState()
+        public MapUnitState()
         {
             atkedcnt = -1;
         }
@@ -135,7 +106,7 @@ namespace SceneTest
 
     public class UnitState
     {
-        public List<SimpleState> state_par { get; set; }
+        public List<MapUnitState> state_par { get; set; }
         public int state { get; set; }
         public double mov_spd_mul { get; set; }
         public double atk_spd_mul { get; set; }
@@ -447,7 +418,7 @@ namespace SceneTest
             throw new NotImplementedException();
         }
 
-        public player_skill_data get_skil_data(int skill_id)
+        public SkillData get_skil_data(int skill_id)
         {
             throw new NotImplementedException();
         }
@@ -647,7 +618,7 @@ namespace SceneTest
 
     public interface IMapUnit : IPoint2D
     {
-        Dictionary<int,player_skill_data> skills { get; set; }
+        Dictionary<int,SkillData> skills { get; set; }
         rednm_type rednm { get; set; }
         int grid_x { get; set; }
         int grid_y { get; set; }
@@ -806,209 +777,8 @@ namespace SceneTest
         int clanid { get; set; }
 
         int llid { get; set; }
-    }
 
-    public class pinfo : IMapUnit
-    {
-        public Dictionary<int, int> addResist { get; set; }
-
-        public int atkcdtm { get; set; }
-
-        public atking atking { get; set; }
-
-        public int atkrange { get; set; }
-
-        public atk_type atktp { get; set; }
-
-        public int atk_dmg_mul { get; set; }
-
-        public int atk_max { get; set; }
-
-        public int atk_min { get; set; }
-
-        public int atk_rate { get; set; }
-
-        public List<BState> bstates { get; set; }
-
-        public casting casting { get; set; }
-
-        public bool cfmv { get; set; }
-
-        public int cid { get; set; }
-
-        public int clanid { get; set; }
-
-        public int criatk { get; set; }
-
-        public int criatk_debuffs { get; set; }
-
-        public int cridmg { get; set; }
-
-        public int cur_kp { get; set; }
-
-        public int def { get; set; }
-
-        public IMapUnit DefaultMapUnit { get; set; }
-
-        public Dictionary<int, long> defend_tm_map { get; set; }
-
-        public int def_red { get; set; }
-
-        public int dmg_red { get; set; }
-
-        public int dobrate { get; set; }
-
-        public int dp { get; set; }
-
-        public int exatk { get; set; }
-
-        public int exatk_debuffs { get; set; }
-
-        public int exdmg { get; set; }
-
-        public int exp { get; set; }
-
-        public int exper_add { get; set; }
-
-        public follow follow { get; set; }
-
-        public int full_hp_rate { get; set; }
-
-        public int full_mp_rate { get; set; }
-
-        public bool ghost { get; set; }
-
-        public int grid_x { get; set; }
-
-        public int grid_y { get; set; }
-
-        public holding holding { get; set; }
-
-        public int hp { get; set; }
-
-        public int hpsuck { get; set; }
-
-        public int hpsuck_dmgmul { get; set; }
-
-        public int igatk_dmg_mul { get; set; }
-
-        public int igdef_rate { get; set; }
-
-        public int igdef_rate_debuffs { get; set; }
-
-        public int igdmg_red { get; set; }
-
-        public int iid { get; set; }
-
-        public int invisible { get; set; }
-
-        public bool in_pczone { get; set; }
-
-        public bool isdie { get; set; }
-
-        public jumping jumping { get; set; }
-
-        public int kp { get; set; }
-
-        public long last_atk_tm { get; set; }
-
-        public List<Point2D> last_mvpts { get; set; }
-
-        public int level { get; set; }
-
-        public int line { get; set; }
-
-        public int llid { get; set; }
-
-        public int lmpid { get; set; }
-
-        public int lvlsideid { get; set; }
-
-        public double lx { get; set; }
-
-        public double ly { get; set; }
-
-        public int map_id { get; set; }
-
-        public int matk_max { get; set; }
-
-        public int matk_min { get; set; }
-
-        public int max_dp { get; set; }
-
-        public int max_hp { get; set; }
-
-        public int max_mp { get; set; }
-
-        public int mid { get; set; }
-
-        public int miss_rate { get; set; }
-
-        public moving moving { get; set; }
-
-        public int mp { get; set; }
-
-        public int observer { get; set; }
-
-        public int org_init_x { get; set; }
-
-        public int org_init_y { get; set; }
-
-        public int owner_cid { get; set; }
-
-        public int pkatk { get; set; }
-
-        public int pkatkrate { get; set; }
-
-        public int pkatk_dmg_mul { get; set; }
-
-        public int pkdef { get; set; }
-
-        public int pkdmg_red { get; set; }
-
-        public int pkigdp_rate { get; set; }
-
-        public int pkigdp_rate_debuffs { get; set; }
-
-        public int pkmatk { get; set; }
-
-        public int pkmisrate { get; set; }
-
-        public pk_state_type pk_state { get; set; }
-
-        public int pk_v { get; set; }
-
-        public rednm_type rednm { get; set; }
-
-        public int rev_atk { get; set; }
-
-        public int rev_dmg_mul { get; set; }
-
-        public int sid { get; set; }
-
-        public int size { get; set; }
-
-        public Dictionary<int, SkillData> skill { get; set; }        
-
-        public Dictionary<int, int> skill_cd { get; set; }
-
-        public long skill_gen_cd { get; set; }
-
-        public long skill_gen_cdst { get; set; }
-
-        public int speed { get; set; }
-
-        public UnitState states { get; set; }
-
-        public int teamid { get; set; }
-
-        public teleping teleping { get; set; }
-
-        public double x { get; set; }
-
-        public double y { get; set; }
-     
-        public long pk_v_revtm { get; set; }
+        long respawn_tm { get; set; }
     }
 
     public class monsterconf_att

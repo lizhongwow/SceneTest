@@ -432,6 +432,16 @@ namespace SceneTest
 
             set;
         }
+
+        public Dictionary<int, SkillData> skills
+        {
+            get; set;
+        }
+
+        public rednm_type rednm
+        {
+            get; set;
+        }
     }
     public class Monster : IBaseUnit
     {
@@ -978,7 +988,7 @@ namespace SceneTest
             int hate_target_iid = 0;
             IBaseUnit hate_target = null;
 
-            foreach (SimpleState sx in this.get_pack_data().states.state_par)
+            foreach (MapUnitState sx in this.get_pack_data().states.state_par)
             {
                 if (null == sx.desc)
                     continue;
